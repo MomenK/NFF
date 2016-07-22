@@ -22,15 +22,17 @@ typedef struct Mult Mult;
 float Mult_forwardpass (void *self, float *inputs);
 float *Mult_backwardpass (void *self, float output_grad);
 
-struct Fuzzier {
+struct FM1 {
   Object proto;
+  float fs; // Fintersection if there is variance
+  float m;
   float s;
 };
 
-typedef struct Fuzzier Fuzzier;
+typedef struct FM1 FM1;
 
-float Fuzzier_forwardpass (void *self, float *inputs);
-float *Fuzzier_backwardpass (void *self, float output_grad);
+float FM1_forwardpass (void *self, float *inputs);
+float *FM1_backwardpass (void *self, float output_grad);
 
 
 float *stager (float *a,float *b);

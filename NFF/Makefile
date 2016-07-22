@@ -1,8 +1,9 @@
 CFLAG=-Wall	-g
 
+
 all:	ex19
 
-ex19:	object.o
+ex19:	-lm	object.o
 
 clean:
 	rm	-f	ex19
