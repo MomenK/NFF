@@ -219,7 +219,6 @@ float FM1_forwardpass (void *self, float *inputsww){
 }
 
 
-//eghuegu4g4ygyg
 float *FM1_backwardpass (void *self, float output_grad){
   FM1 *obj = self;
   if(!obj->_(inputs_grad))  obj->_(inputs_grad) = malloc(2*sizeof(float));
@@ -240,6 +239,7 @@ Object FM1Proto= {
 
 int main(int argc, char *argv[])
 {
+  //TODO all gates Must recieved wires!
   //*************************************Initialization ***********************************
   float step_size = 0.01;
   float g1[] = {-2, 5};
@@ -345,6 +345,14 @@ printf("NL \t\t%f\n",NL->_(forwardpass)(NL, nl));
 printf("Z  \t\t%f\n",Z->_(forwardpass)( Z, z));
 printf("PL \t\t%f\n",PL->_(forwardpass)(PL, pl));
 printf("PH \t\t%f\n",PH->_(forwardpass)(PH, ph));
+
+Wire wr[3];
+Wire ww;
+wr[0].value = 5;
+wr[1].grad=8;
+
+printf(" %f , %f, %zu \n",wr[0].value, wr[1].grad, sizeof(wr)/sizeof(Wire) ); // yes! Input can always be wire TODO
+
 
 
 //***************************************Learning
