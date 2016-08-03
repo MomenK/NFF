@@ -103,13 +103,15 @@ float Add_forwardpass (void *self, float *inputsww){
 //  printf("size I received %zd\n",  sizeof(inputsww)/sizeof(float));
 // THIS DOESN"T WORK BECAUSE IT"S ALWAYS THE SIZE OF THE POINT -> 16 bit "addrees" !
   float output = 0;
+  float prob = 1;
    obj->inputs = malloc(obj->input_size*sizeof(float));
     for (int i =0; i < obj->input_size; i++)
       {
       obj->inputs[i]=inputsww[i];
       output += obj->inputs[i];
+      prob *= obj->inputs[i];
       }
-      obj->output = output;
+      obj->output = output - prob;
       return output;
 }
 
@@ -245,7 +247,7 @@ int main(int argc, char *argv[])
         g2[1]= -4;
   float g3[2] = {.25, .20};
 
-  float b[2]= {1,0};
+  float b[2]= {0.803,0};
   float t[2]= {0,0};
 
 
@@ -306,6 +308,8 @@ Add *PH = NEW(Add, "R7");
 float ph[2]; ph[1]=0;
 //***********************************Layer 4: gates output
 
+float o[5];
+
 //***********************************defuzzification
 
 
@@ -326,7 +330,8 @@ float ph[2]; ph[1]=0;
   r7[0] =Bi_H->_(forwardpass)(Bi_H, b); r7[1]=Tr_Z->_(forwardpass)(Tr_Z, t);
   r8[0] =Bi_H->_(forwardpass)(Bi_H, b); r8[1]=Tr_L->_(forwardpass)(Tr_L, t);
   r9[0] =Bi_H->_(forwardpass)(Bi_H, b); r9[1]=Tr_H->_(forwardpass)(Tr_H, t);
-
+printf("for b: %f --> %f, %f, %f\n",b[0], r1[0], r5[0], r9[0]);
+printf("for t: %f --> %f, %f, %f\n",t[0], r1[1], r5[1], r9[1]);
   z[0]  = R1->_(forwardpass)(R1,r1);
   nl[0] = R2->_(forwardpass)(R2,r2);
   nh[0] = R3->_(forwardpass)(R3,r3);
@@ -338,11 +343,20 @@ float ph[2]; ph[1]=0;
   z[2] = R9->_(forwardpass)(R9,r9);
 
 
-printf("NH \t\t%f\n",NH->_(forwardpass)(NH, nh));
-printf("NL \t\t%f\n",NL->_(forwardpass)(NL, nl));
-printf("Z  \t\t%f\n",Z->_(forwardpass)( Z, z));
-printf("PL \t\t%f\n",PL->_(forwardpass)(PL, pl));
-printf("PH \t\t%f\n",PH->_(forwardpass)(PH, ph));
+
+  o[0] = NH->_(forwardpass)(NH, nh);
+  o[1] = NL->_(forwardpass)(NL, nl);
+  o[2] = Z->_(forwardpass)( Z, z);
+  o[3] = PL->_(forwardpass)(PL, pl);
+  o[4] = PH->_(forwardpass)(PH, ph);
+
+printf("NH \t\t%f\n",o[0]);
+printf("NL \t\t%f\n",o[1]);
+printf("Z  \t\t%f\n",o[2]);
+printf("PL \t\t%f\n",o[3]);
+printf("PH \t\t%f\n",o[4]);
+
+printf("\t\t Output  \t\t%f\n",o[0]*0 + o[1]*0.25 + o[2]*0.5 + o[3] * 0.75 + o[4]);
 
 
 //***************************************Learning
