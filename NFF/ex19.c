@@ -218,6 +218,8 @@ float FM1_forwardpass (void *self, float *inputsww){
       return obj->_(output) ;
 }
 
+
+//eghuegu4g4ygyg
 float *FM1_backwardpass (void *self, float output_grad){
   FM1 *obj = self;
   if(!obj->_(inputs_grad))  obj->_(inputs_grad) = malloc(2*sizeof(float));
