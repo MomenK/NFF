@@ -46,13 +46,13 @@ void die(const char *message)
     exit(1);
 }
 
-struct Inputs{ // Child
+struct Inputs{ // Child of one Line
     char lines[MAX_DATA];
 };
 
-struct Input { // Parent
+struct Input { // Parent reads only one Coloum!
    FILE *file;
-   struct Inputs I[MAX_ELEMENT];
+   struct Inputs I[MAX_ELEMENT]; // Rows !
 };
 
 void InputsLoad(struct Input *inp)
@@ -130,13 +130,13 @@ void Closefile(struct Input *inp)
 
 int main(int argc, char* argv[])
 {
-  if(argc < 2 || argc > 4) die("USAGE: ex17 <dbfile>");
+  if(argc < 2 || argc > 4) die("USAGE: ex17 <dbfile> <colm> <colm>");
   char *filename = argv[1];
 
   //////////////////////////////////////////// Reading and parsing .csv File
   int biceps_col = atoi(argv[2]);
-  struct Input *inp = File_Open(filename);
-  inp = File_Parse(inp ,biceps_col);
+  struct Input *inp = File_Open(filename); // Open the file and loads the data base
+  inp = File_Parse(inp ,biceps_col); // Parses the database into coloums
   InputsPrint(inp);
 
 

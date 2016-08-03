@@ -53,6 +53,8 @@ void *Object_new(size_t size, Object proto, char *type)
     }
 }
 
+
+
 void Wire_destroy(void *self){
   Wire *wr = self;
   if(wr) {

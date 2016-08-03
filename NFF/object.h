@@ -2,6 +2,17 @@
 #define _object_h
 
 typedef struct{
+  float value;
+  float grad;
+  int (*init)(void *self);
+  void (*destroy)(void *self);
+} Wire;
+
+
+void Wire_destroy(void *self);
+void *Wire_new( float value, float grad);
+
+typedef struct{
 float *inputs;
 float output;
 int input_size;
@@ -20,18 +31,10 @@ void Object_destroy(void *self);
 int Object_init(void *self);
 float Object_forwardpass (void *self, float *inputs);
 float *Object_backwardpass (void *self, float output_grad);
-void *Object_new(size_t size, Object proto, char *type);
-
-typedef struct{
-  float value;
-  float grad;
-  int (*init)(void *self);
-  void (*destroy)(void *self);
-} Wire;
+void *Object_new(size_t size, Object proto, char *type); // TO DO : Kill and replace
 
 
-void Wire_destroy(void *self);
-void *Wire_new( float value, float grad);
+
 
 #define NEW(T, N) Object_new(sizeof(T), T##Proto, N)
 #define _(N) proto.N

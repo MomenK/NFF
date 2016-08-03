@@ -6,7 +6,7 @@
 #include <math.h>
 #include "ex19.h"
 
-//#define e(N) expf(N)
+#define gr(N) inputs_grad[N]
 #define sqr(N) \
       ({  __typeof__ (N) _N = (N); \
           _N*_N; })
@@ -87,7 +87,7 @@ void die(const char *message)
   exit(1);
 }
 //
-float *stager(float *a, float *b)
+float *stager(float *a, float *b) //DOGSHIT: only combines 2 each are 2 array
 {
   float* total = malloc(4*( sizeof(float))); // array to hold the result
 
@@ -167,6 +167,30 @@ Object MultProto= {
   .backwardpass = Mult_backwardpass
 };
 
+void *Membership1_New(size_t size, Object proto, float m, float s){ // Need fixing
+
+  if(!proto.init) proto.init = Object_init;
+  if(!proto.forwardpass) proto.forwardpass = Object_forwardpass;
+  if(!proto.backwardpass) proto.backwardpass = Object_backwardpass;
+  if(!proto.destroy) proto.destroy = Object_destroy;
+  if(!proto.input_size) proto.input_size = 2;
+
+  Object *el = calloc(1,size);
+  *el= proto;
+
+  if(!el->init(el)) {
+    el->destroy(el);
+    return NULL;
+  } else {
+    FM1 *fl = calloc( 1 ,sizeof(FM1));
+    fl-> proto = *el;
+    fl->m = m;
+    fl->s = s;
+    printf("Initalization: %d\n",fl->_(init)(fl) );
+    return fl;
+  }
+  }
+
 float FM1_forwardpass (void *self, float *inputsww){
   FM1 *obj = self;
 //  obj->input_size = sizeof(inputsww)/sizeof(float) ;
@@ -174,8 +198,7 @@ float FM1_forwardpass (void *self, float *inputsww){
 // THIS DOESN"T WORK BECAUSE IT"S ALWAYS THE SIZE OF THE POINT -> 16 bit "addrees" !
   float output = 0;
   obj->_(inputs) = malloc(2*sizeof(float));
-
-
+  obj->_(inputs_grad) = malloc(2*sizeof(float));
 
       obj->_(inputs[0])=inputsww[0];
       obj->_(inputs[1]) = inputsww[1];
@@ -197,9 +220,8 @@ float FM1_forwardpass (void *self, float *inputsww){
 
 float *FM1_backwardpass (void *self, float output_grad){
   FM1 *obj = self;
-  obj->_(inputs_grad) = malloc(2*sizeof(float));
-
-    obj->m +=  output_grad * (obj->fs-obj->m) * obj->_(output)/ sqr(obj->s);
+  if(!obj->_(inputs_grad))  obj->_(inputs_grad) = malloc(2*sizeof(float));
+      obj->m +=  output_grad * (obj->fs-obj->m) * obj->_(output)/ sqr(obj->s);
     obj->s +=  output_grad * sqr(obj->fs-obj->m) * obj->_(output) / tri(obj->s);
 
     // real difficulties with update of obj->fs
@@ -221,56 +243,117 @@ int main(int argc, char *argv[])
   float g1[] = {-2, 5};
   float g2[2];
         g2[1]= -4;
-  float g3[2] = {2.5, 0.0};
+  float g3[2] = {.25, .20};
 
-  Add *gate1 = NEW(Add, "Layer 1 gate");
-  Mult *gate2 = NEW(Mult, "Layer 2 gate");
+  float b[2]= {1,0};
+  float t[2]= {0,0};
 
-  Wire *wr  = Wire_new(4.7, 6.7);
-  Wire *wr2  = Wire_new(5.7, 6.7);
-  printf("%f, %f", wr->value , wr->grad);
-  FM1 *gate3 = NEW(FM1, "Layer 1 gate");
-  gate3->m = 5.0;
-  gate3->s = 1.0;
+
+// HOW TO CREATE GATES
+  //Add *gate1 = NEW(Add, "Layer 1 gate");
+  //Mult *gate2 = NEW(Mult, "Layer 2 gate");
+//  Wire *wr  = Wire_new(5.7, 6.7);
+//  printf("%f, %f", wr->value , wr->grad);
+//FM1 *Bi_Z = NEW(FM1, "Layer 2 gate");
+//Bi_Z -> m = 5.0;
+//Bi_Z-> s = 1.0;
+
+//********************************Layer 1: Fuzzy Memebership
+
+  FM1 *Bi_Z = NEWFM1(FM1,0, 0.2);
+  FM1 *Bi_L = NEWFM1(FM1, 0.5, 0.2);
+  FM1 *Bi_H = NEWFM1(FM1, 1, 0.2);
+  //printf("%f, %f", Bi_Z->m , Bi_Z->s);
+  //FM1 *Bi_M =
+
+  FM1 *Tr_Z = NEWFM1(FM1,0, 0.2);
+  FM1 *Tr_L = NEWFM1(FM1, 0.5, 0.2);
+  FM1 *Tr_H = NEWFM1(FM1, 1, 0.2);
+
+//********************************Layer 2: Rules
+Mult *R1 = NEW(Mult, "Z & Z"); //Z
+float r1[2]; // TODO: add this as a property of eac
+Mult *R2 = NEW(Mult, "Z & L"); //NL
+float r2[2];
+Mult *R3 = NEW(Mult, "Z & H"); //NH
+float r3[2];
+
+Mult *R4 = NEW(Mult, "L & Z"); //PL
+float r4[2];
+Mult *R5 = NEW(Mult, "L & L"); //Z
+float r5[2];
+Mult *R6 = NEW(Mult, "L & H"); //NL
+float r6[2];
+
+Mult *R7 = NEW(Mult, "H & Z"); //PH
+float r7[2];
+Mult *R8 = NEW(Mult, "H & L"); //PL
+float r8[2];
+Mult *R9 = NEW(Mult, "H & H"); //Z
+float r9[2];
+// TODO: MUST BE ABLE TO BETTER CONNECT THESE WITH THE RULES OUTPUT.. THE RULES
+// MUST NOT BE PRE-DETERMINED, LAYER 3 IS DOGSHIT
+//**************************************Layer 3: Pre-gates
+Add *NH = NEW(Add, "R3");
+float nh[2]; nh[1]=0;
+Add *NL = NEW(Add, "R2 & R6");
+float nl[2];
+Add *Z  = NEW(Add, "R1 & R5 & R9");
+float z[3];
+Add *PL = NEW(Add, "R4 & R8");
+float pl[2];
+Add *PH = NEW(Add, "R7");
+float ph[2]; ph[1]=0;
+//***********************************Layer 4: gates output
+
+//***********************************defuzzification
+
 
     /* code */
 
+
   //*********************************************forwardpass
-  /////////gate1
-  g2[0]= gate1->_(forwardpass)(gate1, g1);
-  //  printf("output %f\n",g2[0]);
 
 
+  r1[0] =Bi_Z->_(forwardpass)(Bi_Z, b); r1[1]=Tr_Z->_(forwardpass)(Tr_Z, t);
+  r2[0] =Bi_Z->_(forwardpass)(Bi_Z, b); r2[1]=Tr_L->_(forwardpass)(Tr_L, t);
+  r3[0] =Bi_Z->_(forwardpass)(Bi_Z, b); r3[1]=Tr_H->_(forwardpass)(Tr_H, t);
 
-  //////////////////////////////gate2
+  r4[0] =Bi_L->_(forwardpass)(Bi_L, b); r4[1]=Tr_Z->_(forwardpass)(Tr_Z, t);
+  r5[0] =Bi_L->_(forwardpass)(Bi_L, b); r5[1]=Tr_L->_(forwardpass)(Tr_L, t);
+  r6[0] =Bi_L->_(forwardpass)(Bi_L, b); r6[1]=Tr_H->_(forwardpass)(Tr_H, t);
 
-  printf("output %f\n",gate2->_(forwardpass)(gate2, g2));
+  r7[0] =Bi_H->_(forwardpass)(Bi_H, b); r7[1]=Tr_Z->_(forwardpass)(Tr_Z, t);
+  r8[0] =Bi_H->_(forwardpass)(Bi_H, b); r8[1]=Tr_L->_(forwardpass)(Tr_L, t);
+  r9[0] =Bi_H->_(forwardpass)(Bi_H, b); r9[1]=Tr_H->_(forwardpass)(Tr_H, t);
+
+  z[0]  = R1->_(forwardpass)(R1,r1);
+  nl[0] = R2->_(forwardpass)(R2,r2);
+  nh[0] = R3->_(forwardpass)(R3,r3);
+  pl[0] = R4->_(forwardpass)(R4,r4);
+  z[1]  = R5->_(forwardpass)(R5,r5);
+  nl[1] = R6->_(forwardpass)(R6,r6);
+  ph[0] = R7->_(forwardpass)(R7,r7);
+  pl[1] = R8->_(forwardpass)(R8,r8);
+  z[2] = R9->_(forwardpass)(R9,r9);
 
 
-  //////////////////////////////////////////////gate3
+printf("NH \t\t%f\n",NH->_(forwardpass)(NH, nh));
+printf("NL \t\t%f\n",NL->_(forwardpass)(NL, nl));
+printf("Z  \t\t%f\n",Z->_(forwardpass)( Z, z));
+printf("PL \t\t%f\n",PL->_(forwardpass)(PL, pl));
+printf("PH \t\t%f\n",PH->_(forwardpass)(PH, ph));
 
-for (size_t i = 0; i < 50; i++) {
-printf("Fuzzy mmber output \t\t%f\n",gate3->_(forwardpass)(gate3, g3));
-gate3->_(backwardpass)(gate3,1);
+
+//***************************************Learning
 /*
-  ///******************************************************** backprogate
-  gate2->_(backwardpass)(gate2,1);
-  gate1->_(backwardpass)(gate1, gate2->_(inputs_grad[0]));
+for (size_t i = 0; i < 50; i++) {
+printf("Fuzzy mmber output \t\t%f\n",Bi_Z->_(forwardpass)(Bi_Z, g3));
+Bi_Z->_(backwardpass)(Bi_Z,1);
+}
+*/
 
 
-
-  ///***************************************************************************************update
-  g2[1]+= gate2->_(inputs_grad[1])* step_size;
-  g1[0]+= gate1->_(inputs_grad[0]) * step_size;
-  g1[1]+= gate1->_(inputs_grad[0]) * step_size;
-
-  printf("\tupdate x[0] %f\n",g1[0]);
-  printf("\tupdate x[1]%f\n",g1[1]);
-  printf("\tupdate y[1] %f\n",g2[1]);
-
-  //printf("output %f\n",g2[1]*(g1[0]+g1[1]));
-  */
-  }
 }
 
 
@@ -316,4 +399,43 @@ for (size_t i = 0; i < gate2->_(input_size); i++) {
 
   printf("GUdated vale for the %zd input is %f\n", i, gate2->_(inputs[i]) + step_size * gate2->_(inputs_grad[i]) );
 
-      }/**/
+      }/*
+
+
+
+
+      /////////gate1
+      //  g2[0]= gate1->_(forwardpass)(gate1, g1);
+      //  printf("output %f\n",g2[0]);
+
+
+
+      //////////////////////////////gate2
+
+      //printf("output %f\n",gate2->_(forwardpass)(gate2, g2));
+
+
+      //////////////////////////////////////////////gate3
+
+
+
+
+
+
+      ///******************************************************** backprogate
+      //gate2->_(backwardpass)(gate2,1);
+      //gate1->_(backwardpass)(gate1, gate2->_(inputs_grad[0]));
+
+
+      /*
+      ///***************************************************************************************update
+      g2[1]+= gate2->_(inputs_grad[1])* step_size;
+      g1[0]+= gate1->_(inputs_grad[0]) * step_size;
+      g1[1]+= gate1->_(inputs_grad[0]) * step_size;
+
+      printf("\tupdate x[0] %f\n",g1[0]);
+      printf("\tupdate x[1]%f\n",g1[1]);
+      printf("\tupdate y[1] %f\n",g2[1]);
+
+      //printf("output %f\n",g2[1]*(g1[0]+g1[1]));
+      */
