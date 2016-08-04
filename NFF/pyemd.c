@@ -29,6 +29,12 @@ float o2 =0;
 float o=0;
 int flag =1;
 
+if(b==0)
+{
+  o1 = m1;
+  o2 = m2;
+}
+else{
 if(a == 0)
 {
   o1 = -c/(b);
@@ -50,6 +56,7 @@ else {
       flag = 0;
     }
 }
+}
 o = e(-0.5 * sqr((o1-m1)/v1)) >  e(-0.5 * sqr((o2-m1)/v1))  ? o1 : o2 ;
 printf("%f ,  %f \n", e(-0.5 * sqr((o1-m1)/v1)) ,  e(-0.5 * sqr((o2-m1)/v1)) );
 printf("intersection :%s | at %f\n ", flag ? "true" : "false", o );
@@ -60,8 +67,8 @@ int main()
 {
   float m1 = 1;
   float   std1 = 0.2;
-  float   m2 = 0.5;
-  float   std2 = 1.2;
+  float   m2 = 1;
+  float   std2 = 0.2;
   // Intialize plot
   float result = solve1(m1, std1 , m2, std2);
   Py_Initialize();
