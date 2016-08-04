@@ -47,8 +47,12 @@
      float o2 =0;
      float o=0;
      int flag =1;
-
-     if(a == 0)
+if(b==0)
+{
+  o1 = m1;
+  o2 = m2;
+}
+else{     if(a == 0)
      {
        o1 = -c/(b);
        o2 = -c/(b);
@@ -69,6 +73,7 @@
            flag = 0;
          }
      }
+   }
     // printf("here!!!!");
      o = e(-0.5 * sqr((o1-m1)/v1)) >  e(-0.5 * sqr((o2-m1)/v1))  ? o1 : o2 ;
     //printf("%f ,  %f \n", e(-0.5 * sqr((o1-m1)/v1)) ,  e(-0.5 * sqr((o2-m1)/v1)) );
