@@ -20,7 +20,7 @@ float *inputs_grad;
 float output_grad;
 
 int (*init)(void *self);
-float (*forwardpass) (void *self, float *inputs);
+float (*forwardpass) (void *self, Wire *inputs);
 float *(*backwardpass) (void *self, float output_grad);
 void (*destroy)(void *self);
 
@@ -29,7 +29,7 @@ void (*destroy)(void *self);
 
 void Object_destroy(void *self);
 int Object_init(void *self);
-float Object_forwardpass (void *self, float *inputs);
+float Object_forwardpass (void *self, Wire *inputs);
 float *Object_backwardpass (void *self, float output_grad);
 void *Object_new(size_t size, Object proto, char *type); // TO DO : Kill and replace
 

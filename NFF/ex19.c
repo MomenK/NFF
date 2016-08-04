@@ -55,7 +55,7 @@
      }
      else {
          if(delta == 0){
-           printf(" Here\n" );
+          printf(" Here\n" );
             o1 = -b/(2*a);
             o2 = -b/(2*a);
          }
@@ -69,10 +69,10 @@
            flag = 0;
          }
      }
-     printf("here!!!!");
+    // printf("here!!!!");
      o = e(-0.5 * sqr((o1-m1)/v1)) >  e(-0.5 * sqr((o2-m1)/v1))  ? o1 : o2 ;
     //printf("%f ,  %f \n", e(-0.5 * sqr((o1-m1)/v1)) ,  e(-0.5 * sqr((o2-m1)/v1)) );
-    printf("%f ,  %f \n", N(o1,m1,v1) ,  N(o2,m1,v1) );
+  //  printf("%f ,  %f \n", N(o1,m1,v1) ,  N(o2,m1,v1) );
      printf("intersection :%s | at %f with value of : %f\n ", flag ? "true" : "false", o , N(o, m1,v1) );
      return  o;
      }
@@ -97,16 +97,19 @@ printf("%zd\n",sizeof(total)/sizeof(float));
   return total;
 }
 
-float Add_forwardpass (void *self, float *inputsww){
+float Add_forwardpass (void *self, Wire *inputsww){
   Object *obj = self;
-//  obj->input_size = sizeof(inputsww)/sizeof(float) ;
-//  printf("size I received %zd\n",  sizeof(inputsww)/sizeof(float));
+  float *r;
+   //r[0]=  5.8;
+//  obj->input_size = sizeof(inputsww)/sizeof(Wire) ;
+//printf("size I received %d\n",  r[i]);
 // THIS DOESN"T WORK BECAUSE IT"S ALWAYS THE SIZE OF THE POINT -> 16 bit "addrees" !
   float output = 0;
    obj->inputs = malloc(obj->input_size*sizeof(float));
     for (int i =0; i < obj->input_size; i++)
       {
-      obj->inputs[i]=inputsww[i];
+      obj->inputs[i]=inputsww[i].value;
+      printf("input %d :  %f\n",i, inputsww[i].value );
       output += obj->inputs[i];
       }
       obj->output = output;
@@ -130,7 +133,7 @@ Object AddProto= {
 };
 
 
-float Mult_forwardpass (void *self, float *inputsww){
+float Mult_forwardpass (void *self, Wire *inputsww){
   Object *obj = self;
 //  obj->input_size = sizeof(inputsww)/sizeof(float) ;
 //  printf("size I received %zd\n",  sizeof(inputsww)/sizeof(float));
@@ -143,7 +146,7 @@ float Mult_forwardpass (void *self, float *inputsww){
    }
     for (int i =0; i < obj->input_size; i++)
       {
-      obj->inputs[i]=inputsww[i];
+      obj->inputs[i]=inputsww[i].value;
     //  printf("%d :%f\n",i, inputsww[i] );
       output *= obj->inputs[i];
       }
@@ -186,12 +189,12 @@ void *Membership1_New(size_t size, Object proto, float m, float s){ // Need fixi
     fl-> proto = *el;
     fl->m = m;
     fl->s = s;
-    printf("Initalization: %d\n",fl->_(init)(fl) );
+  //  printf("Initalization: %d\n",fl->_(init)(fl) );
     return fl;
   }
   }
 
-float FM1_forwardpass (void *self, float *inputsww){
+float FM1_forwardpass (void *self, Wire *inputsww){
   FM1 *obj = self;
 //  obj->input_size = sizeof(inputsww)/sizeof(float) ;
 //  printf("size I received %zd\n",  sizeof(inputsww)/sizeof(float));
@@ -199,13 +202,12 @@ float FM1_forwardpass (void *self, float *inputsww){
   float output = 0;
   obj->_(inputs) = malloc(2*sizeof(float));
   obj->_(inputs_grad) = malloc(2*sizeof(float));
-
-      obj->_(inputs[0])=inputsww[0];
-      obj->_(inputs[1]) = inputsww[1];
+      obj->_(inputs[0])=inputsww[0].value; printf("Mean :%f gradient:%f\n",inputsww[0].value, inputsww[1].value );
+      obj->_(inputs[1]) = inputsww[1].value;
    if(obj->_(inputs[1])) // None-singleton
    {
    obj->fs = solve(obj->_(inputs[0]), obj->_(inputs[1]) , obj->m, obj->s);
-   obj->_(inputs_grad[1]) = N(solve(obj->_(inputs[0]), obj->_(inputs[1]) , obj->m, obj->s) + 0.0001, obj->m,obj->s)/0.0001; // Analytic gradient
+   obj->_(inputs_grad[1]) = N(obj->fs + 0.0001, obj->m,obj->s)/0.0001; // Analytic gradient
     }
   else
   {
@@ -247,8 +249,8 @@ int main(int argc, char *argv[])
         g2[1]= -4;
   float g3[2] = {.25, .20};
 
-  float b[2]= {1,0};
-  float t[2]= {0,0};
+  Wire b[2];  b[0].value = 1;  b[1].value = 0.2;
+  Wire t[2]; t[0].value =0; t[1].value = 0;
 
 
 // HOW TO CREATE GATES
@@ -262,7 +264,7 @@ int main(int argc, char *argv[])
 
 //********************************Layer 1: Fuzzy Memebership
 
-  FM1 *Bi_Z = NEWFM1(FM1,0, 0.2);
+  FM1 *Bi_Z = NEWFM1(FM1,0, 0.2); //TODO: Relate with input size;
   FM1 *Bi_L = NEWFM1(FM1, 0.5, 0.2);
   FM1 *Bi_H = NEWFM1(FM1, 1, 0.2);
   //printf("%f, %f", Bi_Z->m , Bi_Z->s);
@@ -272,72 +274,72 @@ int main(int argc, char *argv[])
   FM1 *Tr_L = NEWFM1(FM1, 0.5, 0.2);
   FM1 *Tr_H = NEWFM1(FM1, 1, 0.2);
 
+  Wire bz; Wire bl; Wire bh;
+  Wire tz; Wire tl; Wire th;
+
 //********************************Layer 2: Rules
 Mult *R1 = NEW(Mult, "Z & Z"); //Z
-float r1[2]; // TODO: add this as a property of eac
+Wire r1[2]; // TODO: add this as a property of eac
 Mult *R2 = NEW(Mult, "Z & L"); //NL
-float r2[2];
+Wire r2[2];
 Mult *R3 = NEW(Mult, "Z & H"); //NH
-float r3[2];
+Wire r3[2];
 
 Mult *R4 = NEW(Mult, "L & Z"); //PL
-float r4[2];
+Wire r4[2];
 Mult *R5 = NEW(Mult, "L & L"); //Z
-float r5[2];
+Wire r5[2];
 Mult *R6 = NEW(Mult, "L & H"); //NL
-float r6[2];
+Wire r6[2];
 
 Mult *R7 = NEW(Mult, "H & Z"); //PH
-float r7[2];
+Wire r7[2];
 Mult *R8 = NEW(Mult, "H & L"); //PL
-float r8[2];
+Wire r8[2];
 Mult *R9 = NEW(Mult, "H & H"); //Z
-float r9[2];
+Wire r9[2];
 // TODO: MUST BE ABLE TO BETTER CONNECT THESE WITH THE RULES OUTPUT.. THE RULES
 // MUST NOT BE PRE-DETERMINED, LAYER 3 IS DOGSHIT
 //**************************************Layer 3: Pre-gates
 Add *NH = NEW(Add, "R3");
-float nh[2]; nh[1]=0;
+Wire nh; NH->_(input_size) =1;
 Add *NL = NEW(Add, "R2 & R6");
-float nl[2];
+Wire nl[2]; NL->_(input_size);
 Add *Z  = NEW(Add, "R1 & R5 & R9");
-float z[3];
+Wire z[3]; Z->_(input_size) = 3;
 Add *PL = NEW(Add, "R4 & R8");
-float pl[2];
+Wire pl[2]; PL->_(input_size) = 2;
 Add *PH = NEW(Add, "R7");
-float ph[2]; ph[1]=0;
+Wire ph; PH->_(input_size) =1;
 //***********************************Layer 4: gates output
 
 //***********************************defuzzification
 
 
     /* code */
-
-
   //*********************************************forwardpass
+  printf("\t\t Gate B\n" );
+bz.value =Bi_Z->_(forwardpass)(Bi_Z, b);
+bl.value  =Bi_L->_(forwardpass)(Bi_L, b);
+bh.value  =Bi_H->_(forwardpass)(Bi_H, b);
+  printf("\t\t Gate T\n" );
+tz.value=Tr_Z->_(forwardpass)(Tr_Z, t);
+tl.value=Tr_L->_(forwardpass)(Tr_L, t);
+th.value=Tr_H->_(forwardpass)(Tr_H, t);
+
+//r1 = bz,tz;
 
 
-  r1[0] =Bi_Z->_(forwardpass)(Bi_Z, b); r1[1]=Tr_Z->_(forwardpass)(Tr_Z, t);
-  r2[0] =Bi_Z->_(forwardpass)(Bi_Z, b); r2[1]=Tr_L->_(forwardpass)(Tr_L, t);
-  r3[0] =Bi_Z->_(forwardpass)(Bi_Z, b); r3[1]=Tr_H->_(forwardpass)(Tr_H, t);
-
-  r4[0] =Bi_L->_(forwardpass)(Bi_L, b); r4[1]=Tr_Z->_(forwardpass)(Tr_Z, t);
-  r5[0] =Bi_L->_(forwardpass)(Bi_L, b); r5[1]=Tr_L->_(forwardpass)(Tr_L, t);
-  r6[0] =Bi_L->_(forwardpass)(Bi_L, b); r6[1]=Tr_H->_(forwardpass)(Tr_H, t);
-
-  r7[0] =Bi_H->_(forwardpass)(Bi_H, b); r7[1]=Tr_Z->_(forwardpass)(Tr_Z, t);
-  r8[0] =Bi_H->_(forwardpass)(Bi_H, b); r8[1]=Tr_L->_(forwardpass)(Tr_L, t);
-  r9[0] =Bi_H->_(forwardpass)(Bi_H, b); r9[1]=Tr_H->_(forwardpass)(Tr_H, t);
-
-  z[0]  = R1->_(forwardpass)(R1,r1);
-  nl[0] = R2->_(forwardpass)(R2,r2);
-  nh[0] = R3->_(forwardpass)(R3,r3);
-  pl[0] = R4->_(forwardpass)(R4,r4);
-  z[1]  = R5->_(forwardpass)(R5,r5);
-  nl[1] = R6->_(forwardpass)(R6,r6);
-  ph[0] = R7->_(forwardpass)(R7,r7);
-  pl[1] = R8->_(forwardpass)(R8,r8);
-  z[2] = R9->_(forwardpass)(R9,r9);
+/*
+  z[0].value   = R1->_(forwardpass)(R1,r1);
+  nl[0].value  = R2->_(forwardpass)(R2,r2);
+  nh[0].value  = R3->_(forwardpass)(R3,r3);
+  pl[0].value  = R4->_(forwardpass)(R4,r4);
+  z[1].value   = R5->_(forwardpass)(R5,r5);
+  nl[1].value  = R6->_(forwardpass)(R6,r6);
+  ph[0].value  = R7->_(forwardpass)(R7,r7);
+  pl[1].value  = R8->_(forwardpass)(R8,r8);
+  z[2].value = R9->_(forwardpass)(R9,r9);
 
 
 printf("NH \t\t%f\n",NH->_(forwardpass)(NH, nh));
@@ -345,14 +347,16 @@ printf("NL \t\t%f\n",NL->_(forwardpass)(NL, nl));
 printf("Z  \t\t%f\n",Z->_(forwardpass)( Z, z));
 printf("PL \t\t%f\n",PL->_(forwardpass)(PL, pl));
 printf("PH \t\t%f\n",PH->_(forwardpass)(PH, ph));
-
+*/
 Wire wr[3];
 Wire ww;
 wr[0].value = 5;
-wr[1].grad=8;
-
-printf(" %f , %f, %zu \n",wr[0].value, wr[1].grad, sizeof(wr)/sizeof(Wire) ); // yes! Input can always be wire TODO
-
+wr[1].value=8;
+wr[2].value=7;
+//wr = {.value = 3, .grad = 5}; TODO: Figure This out!
+Z->_(input_size) = 3;
+printf("Z  \t\t%f\n",Z->_(forwardpass)( Z, wr));
+printf(" %f , %f, %zu \n",wr[0].value, wr[1].grad, sizeof(wr));
 
 
 //***************************************Learning
@@ -362,8 +366,6 @@ printf("Fuzzy mmber output \t\t%f\n",Bi_Z->_(forwardpass)(Bi_Z, g3));
 Bi_Z->_(backwardpass)(Bi_Z,1);
 }
 */
-
-
 }
 
 

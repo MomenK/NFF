@@ -6,7 +6,7 @@
 
 
 
-float Object_forwardpass(void *self, float *inputs)
+float Object_forwardpass(void *self, Wire *inputs)
 {
     printf("Nothing to forward pass\n" );
     exit;

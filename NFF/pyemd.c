@@ -58,10 +58,10 @@ return o;
 }
 int main()
 {
-  float m1 = 2.5;
-  float   std1 = 0.01;
-  float   m2 = 5.0;
-  float   std2 = 1.0;
+  float m1 = 1;
+  float   std1 = 0.2;
+  float   m2 = 0.5;
+  float   std2 = 1.2;
   // Intialize plot
   float result = solve1(m1, std1 , m2, std2);
   Py_Initialize();
