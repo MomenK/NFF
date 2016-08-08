@@ -13,7 +13,7 @@ void Wire_destroy(void *self);
 void *Wire_new( float value, float grad);
 
 typedef struct{
-float *inputs;
+float *inputs; // MAke this crap wires to keep the pointers addresses
 float output;
 int input_size;
 float *inputs_grad;

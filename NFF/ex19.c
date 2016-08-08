@@ -271,6 +271,10 @@ return obj;
 }
 
 
+void Cha( Wire *self)
+{
+  self->value=9;
+}
 
 int main(int argc, char *argv[])
 {
@@ -333,6 +337,37 @@ Mult *R8 = NEW(Mult, "H & L"); //PL
 Wire *r8;
 Mult *R9 = NEW(Mult, "H & H"); //Z
 Wire *r9;
+
+//**************************************Layer 3: Pre-gates
+Mult *M1 = NEW(Mult, "Seguneo First output"); M1->c = 0;
+Wire *m1;
+
+Mult *M2 = NEW(Mult, "Seguneo First output"); M2->c = 0;
+Wire *m2;
+
+Mult *M3 = NEW(Mult, "Seguneo First output"); M3->c = 0;
+Wire *m3;
+
+Mult *M4 = NEW(Mult, "Seguneo First output"); M4->c = 0;
+Wire *m4;
+
+Mult *M5 = NEW(Mult, "Seguneo First output"); M5->c = 0;
+Wire *m5;
+
+Mult *M6 = NEW(Mult, "Seguneo First output"); M6->c = 0;
+Wire *m6;
+
+Mult *M7 = NEW(Mult, "Seguneo First output"); M7->c = 0;
+Wire *m7;
+
+Mult *M8 = NEW(Mult, "Seguneo First output"); M8->c = 0;
+Wire *m8;
+
+Mult *M9 = NEW(Mult, "Seguneo First output"); M9->c = 0;
+Wire *m9;
+
+Add
+
 // TODO: MUST BE ABLE TO BETTER CONNECT THESE WITH THE RULES OUTPUT.. THE RULES
 // MUST NOT BE PRE-DETERMINED, LAYER 3 IS DOGSHIT
 /*
@@ -440,6 +475,11 @@ Def->grad = sqr(Def->value- 1.0);
 
 printf("LSE %f\n" ,Def->grad);
 
+Wire * a = Wire_new(0.0, 1);
+Cha(a);
+printf("OUTPUT %f\n" ,a->value);
+
+//TODO: for the next part to work you must have stored poniters to the damn inputs
 //***********************************backwardpropagating
 
 /*
