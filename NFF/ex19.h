@@ -15,6 +15,7 @@ float *Add_backwardpass (void *self, float output_grad);
 struct Mult {
   Object proto;
   //int input_size;
+  float c;
 };
 
 typedef struct Mult Mult;

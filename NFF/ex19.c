@@ -113,9 +113,9 @@ float Add_forwardpass (void *self, Wire *inputsww){
    obj->inputs = malloc(obj->input_size*sizeof(float));
     for (int i =0; i < obj->input_size; i++)
       {
-      obj->inputs[i]=inputsww[i].value;
+      obj->inputs[i].value=inputsww[i].value;
       printf("input %d :  %f\n",i, inputsww[i].value );
-      output += obj->inputs[i];
+      output += obj->inputs[i].value;
       }
       obj->output = output;
       return output;
@@ -151,9 +151,9 @@ float Mult_forwardpass (void *self, Wire *inputsww){
    }
     for (int i =0; i < obj->input_size; i++)
       {
-      obj->inputs[i]=inputsww[i].value;
+      obj->inputs[i].value=inputsww[i].value;
     //  printf("%d :%f\n",i, inputsww[i] );
-      output *= obj->inputs[i];
+      output *= obj->inputs[i].value;
       }
       obj->output = output;
       return output;
@@ -164,7 +164,7 @@ float *Mult_backwardpass (void *self, float output_grad){
   obj->inputs_grad = malloc(obj->input_size*sizeof(float));
   for (int i =0; i < obj->input_size; i++)
     {
-    obj->inputs_grad[i] = obj->inputs[1-i]*output_grad;
+    obj->inputs_grad[i] = obj->inputs[1-i].value*output_grad;
     }
     return obj->inputs_grad;
 }
@@ -207,17 +207,17 @@ float FM1_forwardpass (void *self, Wire *inputsww){
   float output = 0;
   obj->_(inputs) = malloc(2*sizeof(float));
   obj->_(inputs_grad) = malloc(2*sizeof(float));
-      obj->_(inputs[0])=inputsww[0].value;
-      obj->_(inputs[1]) = inputsww[1].value;
-   if(obj->_(inputs[1])) // None-singleton
+      obj->_(inputs[0].value)=inputsww[0].value;
+      obj->_(inputs[1].value) = inputsww[1].value;
+   if(obj->_(inputs[1].value)) // None-singleton
    {
-   obj->fs = solve(obj->_(inputs[0]), obj->_(inputs[1]) , obj->m, obj->s);
+   obj->fs = solve(obj->_(inputs[0].value), obj->_(inputs[1].value) , obj->m, obj->s);
    obj->_(inputs_grad[1]) = N(obj->fs + 0.0001, obj->m,obj->s)/0.0001; // Analytic gradient
     }
   else
   {
     printf("\t\t\t\t\t\t\tsingleton!!\n" );
-    obj->fs = obj->_(inputs[0]);
+    obj->fs = obj->_(inputs[0].value);
   //  printf("Input is --> %f\n", obj->fs);
   }
       obj->_(output) =N(obj->fs, obj->m,obj->s);
@@ -273,7 +273,8 @@ return obj;
 
 void Cha( Wire *self)
 {
-  self->value=9;
+  Wire * m =self;
+  m->value=9;
 }
 
 int main(int argc, char *argv[])
@@ -366,8 +367,6 @@ Wire *m8;
 Mult *M9 = NEW(Mult, "Seguneo First output"); M9->c = 0;
 Wire *m9;
 
-Add
-
 // TODO: MUST BE ABLE TO BETTER CONNECT THESE WITH THE RULES OUTPUT.. THE RULES
 // MUST NOT BE PRE-DETERMINED, LAYER 3 IS DOGSHIT
 /*
@@ -432,6 +431,7 @@ th->value=Tr_H->_(forwardpass)(Tr_H, t);
  r7 = Wirejoin(bh,tz,1);
  r8 = Wirejoin(bh,tl,1);
  r9 = Wirejoin(bh,th,1);
+ //ll
 //printf("Value %f\n" ,r1[9].value);
 
 
@@ -475,7 +475,7 @@ Def->grad = sqr(Def->value- 1.0);
 
 printf("LSE %f\n" ,Def->grad);
 
-Wire * a = Wire_new(0.0, 1);
+Wire * a = Wire_new(0.0, 2);
 Cha(a);
 printf("OUTPUT %f\n" ,a->value);
 
