@@ -242,41 +242,34 @@ Object FM1Proto= {
   .backwardpass = FM1_backwardpass
 };
 
-void *Wirejoin( Wire a, Wire b)
+
+
+void *Wirejoin( Wire *a, Wire *b, size_t n)
 {
-Wire *obj = malloc(sizeof(a) + sizeof(b));
+Wire *obj = malloc(2*n *sizeof(Wire));
 int i;
-for( i=0; i<sizeof(a)/sizeof(Wire); i++){
-obj[i].value =  a.value;
-obj[i].grad = a.grad;
-}
-for(int j=0; j< sizeof(b)/sizeof(Wire); j++){
-obj[i+j].value = b.value;
-obj[i+j].grad = b.grad;
-
-}
-return obj;
-
-}
-
-
-void *Wirejoin2( Wire * a, Wire * b)
+if (n==1)
 {
-Wire *obj = malloc(4 *sizeof(Wire));
-int i;
-for( i=0; i<2; i++){
+  obj[0].value =  a->value;
+  obj[0].grad = a->grad;
+  obj[1].value = b->value;
+  obj[1].grad = b->grad;
+}
+else{
+for( i=0; i<n; i++){
 obj[i].value =  a[i].value;
 obj[i].grad = a[i].grad;
 }
 
-for(int j=0; j< 2; j++){
+for(int j=0; j< n; j++){
 obj[i+j].value = b[i].value;
 obj[i+j].grad = b[i].grad;
-
+}
 }
 return obj;
 
 }
+
 
 
 int main(int argc, char *argv[])
@@ -301,18 +294,23 @@ int main(int argc, char *argv[])
 
 //********************************Layer 1: Fuzzy Memebership
 
-  FM1 *Bi_Z = NEWFM1(FM1,0, 0.2); //TODO: Relate with input size;
-  FM1 *Bi_L = NEWFM1(FM1, 0.5, 0.2);
-  FM1 *Bi_H = NEWFM1(FM1, 1, 0.2);
+  FM1 *Bi_Z = NEWFM1(FM1,  0, 0.2); //TODO: Relate with input size;
+  FM1 *Bi_L = NEWFM1(FM1,0.5, 0.2);
+  FM1 *Bi_H = NEWFM1(FM1,  1, 0.2);
   //printf("%f, %f", Bi_Z->m , Bi_Z->s);
   //FM1 *Bi_M =
 
-  FM1 *Tr_Z = NEWFM1(FM1,0, 0.2);
-  FM1 *Tr_L = NEWFM1(FM1, 0.5, 0.2);
-  FM1 *Tr_H = NEWFM1(FM1, 1, 0.2);
+  FM1 *Tr_Z = NEWFM1(FM1,  0, 0.2);
+  FM1 *Tr_L = NEWFM1(FM1,0.5, 0.2);
+  FM1 *Tr_H = NEWFM1(FM1,  1, 0.2);
 
-  Wire bz; Wire bl; Wire bh;
-  Wire tz; Wire tl; Wire th;
+  Wire *bz = Wire_new(0,0);
+  Wire *bl = Wire_new(0,0);
+  Wire *bh = Wire_new(0,0);
+
+  Wire *tz = Wire_new(0,0);
+  Wire *tl = Wire_new(0,0);
+  Wire *th = Wire_new(0,0);
 
 //********************************Layer 2: Rules
 Mult *R1 = NEW(Mult, "Z & Z"); //Z
@@ -337,6 +335,7 @@ Mult *R9 = NEW(Mult, "H & H"); //Z
 Wire *r9;
 // TODO: MUST BE ABLE TO BETTER CONNECT THESE WITH THE RULES OUTPUT.. THE RULES
 // MUST NOT BE PRE-DETERMINED, LAYER 3 IS DOGSHIT
+/*
 //**************************************Layer 3: Pre-gates
 Add *NH = NEW(Add, "R3");
 Wire nh[2]; NH->_(input_size) =1;
@@ -348,33 +347,17 @@ Add *PL = NEW(Add, "R4 & R8");
 Wire pl[2]; PL->_(input_size) = 2;
 Add *PH = NEW(Add, "R7");
 Wire ph[2]; PH->_(input_size) =1;
-//***********************************Layer 4: gates output
-
-//***********************************defuzzification
-//Wire *rr;
-
-    /* code */
-  //*********************************************forwardpass
-  printf("\t\t Gate B\n" );
-bz.value =Bi_Z->_(forwardpass)(Bi_Z, b);
-bl.value  =Bi_L->_(forwardpass)(Bi_L, b);
-bh.value  =Bi_H->_(forwardpass)(Bi_H, b);
-  printf("\t\t Gate T\n" );
-tz.value=Tr_Z->_(forwardpass)(Tr_Z, t);
-tl.value=Tr_L->_(forwardpass)(Tr_L, t);
-th.value=Tr_H->_(forwardpass)(Tr_H, t);
-
- r1 = Wirejoin(bz,tz);
- r2 = Wirejoin(bz,tl);
- r3 = Wirejoin(bz,th);
- r4 = Wirejoin(bl,tz);
- r5 = Wirejoin(bl,tl);
- r6 = Wirejoin(bl,th);
- r7 = Wirejoin(bh,tz);
- r8 = Wirejoin(bh,tl);
- r9 = Wirejoin(bh,th);
-//printf("Value %f\n" ,r1[9].value);
-
+*/
+//***********************************Layer 3: gates output
+Wire *o1 = Wire_new(0,0);
+Wire *o2 = Wire_new(0,0);
+Wire *o3 = Wire_new(0,0);
+Wire *o4 = Wire_new(0,0);
+Wire *o5 = Wire_new(0,0);
+Wire *o6 = Wire_new(0,0);
+Wire *o7 = Wire_new(0,0);
+Wire *o8 = Wire_new(0,0);
+Wire *o9 = Wire_new(0,0);
 
 float O1 = 0.5;
 float O2 = 0.25;
@@ -387,51 +370,78 @@ float O8 = 0.75;
 float O9 = 0.5;
 
 
+Wire * Def = Wire_new(0,0);
+float N;
 
-Wire *o1 = Wire_new(0,0);
-Wire o2;
-Wire o3;
-Wire o4;
-Wire o5;
-Wire o6;
-Wire o7;
-Wire o8;
-Wire o9;
+//Wire *rr;
+
+    /* code */
+  //*********************************************forwardpass
+  printf("\t\t Gate B\n" );
+bz->value =Bi_Z->_(forwardpass)(Bi_Z, b);
+bl->value  =Bi_L->_(forwardpass)(Bi_L, b);
+bh->value  =Bi_H->_(forwardpass)(Bi_H, b);
+  printf("\t\t Gate T\n" );
+tz->value=Tr_Z->_(forwardpass)(Tr_Z, t);
+tl->value=Tr_L->_(forwardpass)(Tr_L, t);
+th->value=Tr_H->_(forwardpass)(Tr_H, t);
 
 
-o1->value = R1->_(forwardpass)(R1,r1);
-o2.value  = R2->_(forwardpass)(R2,r2);
-o3.value  = R3->_(forwardpass)(R3,r3);
-o4.value  = R4->_(forwardpass)(R4,r4);
-o5.value  = R5->_(forwardpass)(R5,r5);
-o6.value  = R6->_(forwardpass)(R6,r6);
-o7.value  = R7->_(forwardpass)(R7,r7);
-o8.value  = R8->_(forwardpass)(R8,r8);
-o9.value  = R9->_(forwardpass)(R9,r9);
 
-Wire Def;
+ r1 = Wirejoin(bz,tz,1);
+ r2 = Wirejoin(bz,tl,1);
+ r3 = Wirejoin(bz,th,1);
+ r4 = Wirejoin(bl,tz,1);
+ r5 = Wirejoin(bl,tl,1);
+ r6 = Wirejoin(bl,th,1);
+ r7 = Wirejoin(bh,tz,1);
+ r8 = Wirejoin(bh,tl,1);
+ r9 = Wirejoin(bh,th,1);
+//printf("Value %f\n" ,r1[9].value);
 
-Def.value = o1->value * O1 +
-            o2.value * O2 +
-            o3.value * O3 +
-            o4.value * O4 +
-            o5.value * O5 +
-            o6.value * O6 +
-            o7.value * O7 +
-            o8.value * O8 +
-            o9.value * O9;
 
-float N =             o1->value  +
-                        o2.value +
-                        o3.value +
-                        o4.value +
-                        o5.value +
-                        o6.value +
-                        o7.value +
-                        o8.value +
-                        o9.value ;
+o1->value  = R1->_(forwardpass)(R1,r1);
+o2->value  = R2->_(forwardpass)(R2,r2);
+o3->value  = R3->_(forwardpass)(R3,r3);
+o4->value  = R4->_(forwardpass)(R4,r4);
+o5->value  = R5->_(forwardpass)(R5,r5);
+o6->value  = R6->_(forwardpass)(R6,r6);
+o7->value  = R7->_(forwardpass)(R7,r7);
+o8->value  = R8->_(forwardpass)(R8,r8);
+o9->value  = R9->_(forwardpass)(R9,r9);
 
-printf("OUTPUT %f\n" ,Def.value);
+//***********************************defuzzification
+
+
+Def->value =  o1->value * O1 +
+              o2->value * O2 +
+              o3->value * O3 +
+              o4->value * O4 +
+              o5->value * O5 +
+              o6->value * O6 +
+              o7->value * O7 +
+              o8->value * O8 +
+              o9->value * O9;
+
+N =           o1->value +
+              o2->value +
+              o3->value +
+              o4->value +
+              o5->value +
+              o6->value +
+              o7->value +
+              o8->value +
+              o9->value ;
+
+printf("OUTPUT %f\n" ,Def->value);
+
+
+Def->grad = sqr(Def->value- 1.0);
+
+printf("LSE %f\n" ,Def->grad);
+
+//***********************************backwardpropagating
+
 /*
 
   nh[0].value  = R3->_(forwardpass)(R3,r3);
@@ -449,7 +459,7 @@ printf("Z  \t\t%f\n",Z->_(forwardpass)( Z, z));
 printf("PL \t\t%f\n",PL->_(forwardpass)(PL, pl));
 printf("PH \t\t%f\n",PH->_(forwardpass)(PH, ph));
 
-*/
+
 Wire wr[3];
 Wire ww;
 wr[0].value = 5;
@@ -483,7 +493,10 @@ printf("Gate created\n" );
 //float intial_inputs[] = {1.2,1.0,5};
 
 float a[] ={1.0, 2.4};
-float b[] = {5.0, 0.0};
+float b[] = {5.0, 0.0};obj[0].value =  a.value;
+  obj[0].grad = a.grad;
+  obj[1].value = b.value;
+  obj[1].grad = b.grad;
 gate1->_(input_size) =4; // need a better way man
 float *intial_inputs = stager(a,b);
 
