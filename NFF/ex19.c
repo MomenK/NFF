@@ -78,7 +78,7 @@ else{     if(a == 0)
      o = e(-0.5 * sqr((o1-m1)/v1)) >  e(-0.5 * sqr((o2-m1)/v1))  ? o1 : o2 ;
     //printf("%f ,  %f \n", e(-0.5 * sqr((o1-m1)/v1)) ,  e(-0.5 * sqr((o2-m1)/v1)) );
   //  printf("%f ,  %f \n", N(o1,m1,v1) ,  N(o2,m1,v1) );
-     printf("intersection :%s | at %f with value of : %f\n ", flag ? "true" : "false", o , N(o, m1,v1) );
+     printf("\t\t\t\t\t\t\tintersection :%s | at %f with value of : %f\n ", flag ? "true" : "false", o , N(o, m1,v1) );
      return  o;
      }
 
@@ -207,7 +207,7 @@ float FM1_forwardpass (void *self, Wire *inputsww){
   float output = 0;
   obj->_(inputs) = malloc(2*sizeof(float));
   obj->_(inputs_grad) = malloc(2*sizeof(float));
-      obj->_(inputs[0])=inputsww[0].value; printf("Mean :%f gradient:%f\n",inputsww[0].value, inputsww[1].value );
+      obj->_(inputs[0])=inputsww[0].value;
       obj->_(inputs[1]) = inputsww[1].value;
    if(obj->_(inputs[1])) // None-singleton
    {
@@ -216,12 +216,12 @@ float FM1_forwardpass (void *self, Wire *inputsww){
     }
   else
   {
-    printf("singleton!!\n" );
+    printf("\t\t\t\t\t\t\tsingleton!!\n" );
     obj->fs = obj->_(inputs[0]);
   //  printf("Input is --> %f\n", obj->fs);
   }
       obj->_(output) =N(obj->fs, obj->m,obj->s);
-  //    printf("output is: --> %f, mean is -> %f , variance is -> %f | Input %f\n", N(obj->fs, obj->m,obj->s), obj->m, obj->s , obj->fs);
+  printf("output is: --> %f\n", obj->_(output));
       return obj->_(output) ;
 }
 
@@ -242,6 +242,41 @@ Object FM1Proto= {
   .backwardpass = FM1_backwardpass
 };
 
+void *Wirejoin( Wire a, Wire b)
+{
+Wire *obj = malloc(sizeof(a) + sizeof(b));
+int i;
+for( i=0; i<sizeof(a)/sizeof(Wire); i++){
+obj[i].value =  a.value;
+obj[i].grad = a.grad;
+}
+for(int j=0; j< sizeof(b)/sizeof(Wire); j++){
+obj[i+j].value = b.value;
+obj[i+j].grad = b.grad;
+
+}
+return obj;
+
+}
+
+
+void *Wirejoin2( Wire * a, Wire * b)
+{
+Wire *obj = malloc(4 *sizeof(Wire));
+int i;
+for( i=0; i<2; i++){
+obj[i].value =  a[i].value;
+obj[i].grad = a[i].grad;
+}
+
+for(int j=0; j< 2; j++){
+obj[i+j].value = b[i].value;
+obj[i+j].grad = b[i].grad;
+
+}
+return obj;
+
+}
 
 
 int main(int argc, char *argv[])
@@ -249,12 +284,9 @@ int main(int argc, char *argv[])
   //TODO all gates Must recieved wires!
   //*************************************Initialization ***********************************
   float step_size = 0.01;
-  float g1[] = {-2, 5};
-  float g2[2];
-        g2[1]= -4;
-  float g3[2] = {.25, .20};
 
-  Wire b[2];  b[0].value = 1;  b[1].value = 0.2;
+
+  Wire b[2];  b[0].value = 1;  b[1].value = 0;
   Wire t[2]; t[0].value =0; t[1].value = 0;
 
 
@@ -284,30 +316,30 @@ int main(int argc, char *argv[])
 
 //********************************Layer 2: Rules
 Mult *R1 = NEW(Mult, "Z & Z"); //Z
-Wire r1[2]; // TODO: add this as a property of eac
+Wire * r1; // TODO: add this as a property of eac
 Mult *R2 = NEW(Mult, "Z & L"); //NL
-Wire r2[2];
+Wire * r2;
 Mult *R3 = NEW(Mult, "Z & H"); //NH
-Wire r3[2];
+Wire * r3;
 
 Mult *R4 = NEW(Mult, "L & Z"); //PL
-Wire r4[2];
+Wire * r4;
 Mult *R5 = NEW(Mult, "L & L"); //Z
-Wire r5[2];
+Wire * r5;
 Mult *R6 = NEW(Mult, "L & H"); //NL
-Wire r6[2];
+Wire * r6;
 
 Mult *R7 = NEW(Mult, "H & Z"); //PH
-Wire r7[2];
+Wire *r7;
 Mult *R8 = NEW(Mult, "H & L"); //PL
-Wire r8[2];
+Wire *r8;
 Mult *R9 = NEW(Mult, "H & H"); //Z
-Wire r9[2];
+Wire *r9;
 // TODO: MUST BE ABLE TO BETTER CONNECT THESE WITH THE RULES OUTPUT.. THE RULES
 // MUST NOT BE PRE-DETERMINED, LAYER 3 IS DOGSHIT
 //**************************************Layer 3: Pre-gates
 Add *NH = NEW(Add, "R3");
-Wire nh; NH->_(input_size) =1;
+Wire nh[2]; NH->_(input_size) =1;
 Add *NL = NEW(Add, "R2 & R6");
 Wire nl[2]; NL->_(input_size);
 Add *Z  = NEW(Add, "R1 & R5 & R9");
@@ -315,11 +347,11 @@ Wire z[3]; Z->_(input_size) = 3;
 Add *PL = NEW(Add, "R4 & R8");
 Wire pl[2]; PL->_(input_size) = 2;
 Add *PH = NEW(Add, "R7");
-Wire ph; PH->_(input_size) =1;
+Wire ph[2]; PH->_(input_size) =1;
 //***********************************Layer 4: gates output
 
 //***********************************defuzzification
-
+//Wire *rr;
 
     /* code */
   //*********************************************forwardpass
@@ -332,12 +364,76 @@ tz.value=Tr_Z->_(forwardpass)(Tr_Z, t);
 tl.value=Tr_L->_(forwardpass)(Tr_L, t);
 th.value=Tr_H->_(forwardpass)(Tr_H, t);
 
-//r1 = bz,tz;
+ r1 = Wirejoin(bz,tz);
+ r2 = Wirejoin(bz,tl);
+ r3 = Wirejoin(bz,th);
+ r4 = Wirejoin(bl,tz);
+ r5 = Wirejoin(bl,tl);
+ r6 = Wirejoin(bl,th);
+ r7 = Wirejoin(bh,tz);
+ r8 = Wirejoin(bh,tl);
+ r9 = Wirejoin(bh,th);
+//printf("Value %f\n" ,r1[9].value);
 
 
+float O1 = 0.5;
+float O2 = 0.25;
+float O3 = 0;
+float O4 = 0.75;
+float O5 = 0.5;
+float O6 = 0.25;
+float O7 = 1;
+float O8 = 0.75;
+float O9 = 0.5;
+
+
+
+Wire *o1 = Wire_new(0,0);
+Wire o2;
+Wire o3;
+Wire o4;
+Wire o5;
+Wire o6;
+Wire o7;
+Wire o8;
+Wire o9;
+
+
+o1->value = R1->_(forwardpass)(R1,r1);
+o2.value  = R2->_(forwardpass)(R2,r2);
+o3.value  = R3->_(forwardpass)(R3,r3);
+o4.value  = R4->_(forwardpass)(R4,r4);
+o5.value  = R5->_(forwardpass)(R5,r5);
+o6.value  = R6->_(forwardpass)(R6,r6);
+o7.value  = R7->_(forwardpass)(R7,r7);
+o8.value  = R8->_(forwardpass)(R8,r8);
+o9.value  = R9->_(forwardpass)(R9,r9);
+
+Wire Def;
+
+Def.value = o1->value * O1 +
+            o2.value * O2 +
+            o3.value * O3 +
+            o4.value * O4 +
+            o5.value * O5 +
+            o6.value * O6 +
+            o7.value * O7 +
+            o8.value * O8 +
+            o9.value * O9;
+
+float N =             o1->value  +
+                        o2.value +
+                        o3.value +
+                        o4.value +
+                        o5.value +
+                        o6.value +
+                        o7.value +
+                        o8.value +
+                        o9.value ;
+
+printf("OUTPUT %f\n" ,Def.value);
 /*
-  z[0].value   = R1->_(forwardpass)(R1,r1);
-  nl[0].value  = R2->_(forwardpass)(R2,r2);
+
   nh[0].value  = R3->_(forwardpass)(R3,r3);
   pl[0].value  = R4->_(forwardpass)(R4,r4);
   z[1].value   = R5->_(forwardpass)(R5,r5);
@@ -352,6 +448,7 @@ printf("NL \t\t%f\n",NL->_(forwardpass)(NL, nl));
 printf("Z  \t\t%f\n",Z->_(forwardpass)( Z, z));
 printf("PL \t\t%f\n",PL->_(forwardpass)(PL, pl));
 printf("PH \t\t%f\n",PH->_(forwardpass)(PH, ph));
+
 */
 Wire wr[3];
 Wire ww;
