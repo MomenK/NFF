@@ -10,7 +10,7 @@ struct Add {
 
 typedef struct Add Add;
 float Add_forwardpass (void *self, Wire *inputs);
-float *Add_backwardpass (void *self, float output_grad);
+float *Add_backwardpass (void *self);
 
 struct Mult {
   Object proto;
@@ -21,7 +21,7 @@ struct Mult {
 typedef struct Mult Mult;
 
 float Mult_forwardpass (void *self, Wire *inputs);
-float *Mult_backwardpass (void *self, float output_grad);
+float *Mult_backwardpass (void *self);
 
 struct FM1 {
   Object proto;
@@ -33,7 +33,7 @@ struct FM1 {
 typedef struct FM1 FM1;
 
 float FM1_forwardpass (void *self, Wire *inputs);
-float *FM1_backwardpass (void *self, float output_grad);
+float *FM1_backwardpass (void *self);
 void *Membership1_New(size_t size, Object proto, float m, float s);
 
 float *stager (float *a,float *b);

@@ -12,7 +12,7 @@ float Object_forwardpass(void *self, Wire *inputs)
     exit;
 }
 
-float *Object_backwardpass(void *self, float output_grad)
+float *Object_backwardpass(void *self)
 {
   printf("Nothing to backpropagate pass\n" );
   exit;
