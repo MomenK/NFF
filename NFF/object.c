@@ -6,13 +6,13 @@
 
 
 
-float Object_forwardpass(void *self, Wire *inputs)
+Wire Object_forwardpass(void *self, Wire **inputs)
 {
     printf("Nothing to forward pass\n" );
     exit;
 }
 
-float *Object_backwardpass(void *self)
+void Object_backwardpass(void *self)
 {
   printf("Nothing to backpropagate pass\n" );
   exit;

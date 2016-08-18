@@ -102,33 +102,35 @@ printf("%zd\n",sizeof(total)/sizeof(float));
   return total;
 }
 
-float Add_forwardpass (void *self, Wire *inputsww){
+Wire Add_forwardpass (void *self, Wire **ppw){
   Object *obj = self;
   float *r;
-   //r[0]=  5.8;
-//  obj->input_size = sizeof(inputsww)/sizeof(Wire) ;
-//printf("size I received %d\n",  r[i]);
-// THIS DOESN"T WORK BECAUSE IT"S ALWAYS THE SIZE OF THE POINT -> 16 bit "addrees" !
+  obj->inj = ppw;
+
+
   float output = 0;
    obj->inputs = malloc(obj->input_size*sizeof(float));
+obj->inputs = *ppw;
     for (int i =0; i < obj->input_size; i++)
       {
-      obj->inputs[i].value=inputsww[i].value;
-      printf("input %d :  %f\n",i, inputsww[i].value );
+    //  obj->inputs[i]=m[i];
+      printf("input %d :  %f\n",i, obj->inputs[i].value );
       output += obj->inputs[i].value;
       }
       obj->output = output;
-      return output;
+      Wire x ; x.value = output;
+      return x;
 }
 
-float *Add_backwardpass (void *self){
+void Add_backwardpass (void *self){
   Object *obj = self;
-  obj->inputs_grad = malloc(obj->input_size*sizeof(float));
+  //obj->inputs_grad = malloc(obj->input_size*sizeof(float));
   for (int i =0; i < obj->input_size; i++)
     {
-    obj->inputs_grad[i] = 1*obj->output_grad;
+printf("grad %d :  %f\n",i, obj->inputs[i].grad );
+    obj->inputs[i].grad = 1*obj->output_grad;
     }
-    return obj->inputs_grad;
+  //  return obj->inputs_grad;
 }
 
 
@@ -136,6 +138,8 @@ Object AddProto= {
   .forwardpass = Add_forwardpass,
   .backwardpass = Add_backwardpass
 };
+
+/*
 
 
 float Mult_forwardpass (void *self, Wire *inputsww){
@@ -156,9 +160,7 @@ float Mult_forwardpass (void *self, Wire *inputsww){
       output *= obj->inputs[i].value;
       }
       obj->output = output;
-      return output;
-}
-
+      return output;value
 float *Mult_backwardpass (void *self){
   Object *obj = self;
   obj->inputs_grad = malloc(obj->input_size*sizeof(float));
@@ -242,20 +244,31 @@ Object FM1Proto= {
   .backwardpass = FM1_backwardpass
 };
 
+*/
 
-
-void *Wirejoin( Wire ** a, Wire ** b, size_t n) // recieves pp from p addrss
+void *Wirejoin( Wire ** a, Wire ** b, size_t n,size_t m) // recieves pp from p addrss
 {
-Wire *obj = calloc(2*n ,sizeof(Wire));
+  size_t step = sizeof(Wire);
+Wire *obj = calloc(m+n ,step);
 //Wire ** obj;
 int i;
-obj[0]= **a;
-obj[1]= **b;
-* a = &obj[0]; // changes the value pointed to by p ( since pp point to that value)
-* b = &obj[1];
+for (i = 0; i<n ; i++)
+{
+obj[i]= **(a+i);
+printf("%f\n", obj[i].value );
+* (a) = &obj[i]; // changes the value pointed to by p ( since pp point to that value)
+}
+
+
+//for(int j=0; j<m ;j++)
+//{
+obj[n]= **(b);
+
+* (b) = &obj[n];
+//}j1[0].grad
 
 return obj;
-//
+//TODO: currently NOT working for more than one!
 }
 
 
@@ -264,6 +277,7 @@ void Cha( Wire *self)
   Wire * m =self;
   m->value=9;
 }
+
 
 
 
@@ -299,7 +313,7 @@ int main(int argc, char *argv[])
   FM1 *Bi_L = NEWFM1(FM1,0.5, 0.2);
   FM1 *Bi_H = NEWFM1(FM1,  1, 0.2);
 
-
+j1[0].grad
   FM1 *Tr_Z = NEWFM1(FM1,  0, 0.2);
   FM1 *Tr_L = NEWFM1(FM1,0.5, 0.2);
   FM1 *Tr_H = NEWFM1(FM1,  1, 0.2);
@@ -386,7 +400,8 @@ float O9 = 0.5;
 
 
 Wire * Def = Wire_new(0,0);
-float N;
+float N;printf("g %f\n" ,g->value);
+printf("j %f\n" ,j[1].value);
 
 //Wire *rr;
 
@@ -394,9 +409,7 @@ float N;
   //*********************************************forwardpass
   /*
   printf("\t\t Gate B\n" );
-bz->value =Bi_Z->_(forwardpass)(Bi_Z, b);
-bl->value  =Bi_L->_(forwardpass)(Bi_L, b);
-bh->value  =Bi_H->_(forwardpass)(Bi_H, b);
+bz->value =Bi_Z->_(forwardpass)(Bi_Z, b);Mult *M9 = NEW(Mult, "Seguneo First output"); M9->c = 0;
   printf("\t\t Gate T\n" );
 tz->value=Tr_Z->_(forwardpass)(Tr_Z, t);
 tl->value=Tr_L->_(forwardpass)(Tr_L, t);
@@ -457,25 +470,37 @@ Def->grad = sqr(Def->value- 1.0);
 
 printf("LSE %f\n" ,Def->grad);
 */
-Wire * a = Wire_new(0.0, 2);
-Cha(a);
-printf("OUTPUT %f\n" ,a->value);
+Wire * a = Wire_new(0, 0);
+Wire * g = Wire_new(1, 0);
 
-
-Wire * g = Wire_new(1.2, 2);
+Wire *a1 = Wire_new(2,1);
+Wire *g1 = Wire_new(3,1);
 
 Wire * j;
+Wire * j1;
 
-printf("address of p by g %p\n" ,g);
-//printf("OUTPUT %p\n" ,&g);
-j = Wirejoin(&a,&g,1);
-printf("address of p by g %p\n" ,g);
-printf("g %f\n" ,g->value);
-printf("j %f\n" ,j[1].value);
-j[1].value = 5;
-g->value = 19;
-printf("g %f\n" ,g->value);
-printf("j %f\n" ,j[1].value);
+
+j = Wirejoin(&a,&g,1,1);
+j1 = Wirejoin(&a1, &g1,1,1);
+
+printf("j %f\n" ,j1[0].value);
+printf("j %f\n" ,j1[1].value);
+
+
+Add *add = NEW(Add,"TESt");
+
+printf("the out of add gate is %f\n",add->_(forwardpass)(add,&j1).value );
+printf("grad of first input is %f\n",j1[0].grad );
+printf("grad of second input is %f\n",j1[1].grad);
+add->_(output_grad) = 7;
+add->_(backwardpass)(add);
+
+printf("grad of first input is %f\n",j1[0].grad);
+printf("grad of second input is %f\n",j1[1].grad);
+//j[1].value = 5;
+//g->value = 19;
+
+
 
 //printf("OUTPUT %f\n" ,j[1].value);
 
