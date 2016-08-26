@@ -91,3 +91,12 @@ bun.size = N;
 bun.addr = calloc(N, sizeof(Wire));
 return bun;
 }
+
+Neuron newNeuron(Bundle *inbun, Wire *outir)
+{
+  Neuron Neu;
+  Neu.inbun = inbun;
+  Neu.outir = outir;
+  return Neu;
+
+}

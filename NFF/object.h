@@ -22,6 +22,13 @@ typedef struct{
 Bundle newBundle(size_t N);
 
 typedef struct{
+  Bundle *inbun; // MAke this crap wires to keep the pointers addresses
+  Wire *outir;
+}Neuron;
+
+Neuron newNeuron(Bundle *inbun, Wire *outir);
+
+typedef struct{
 Wire **inj; // MAke this crap wires to keep the pointers addresses
 Wire *inputs;
 float output;

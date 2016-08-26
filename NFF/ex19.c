@@ -7,8 +7,9 @@
 #include "ex19.h"
 
 
-#define Ref(T,N) &(*(Wire*)T.addr[N]);
-#define Wrap(B,W,I) B.addr[I]=(unsigned long int)&W;
+#define AdRef(T,N) &(*(Wire*)T.addr[N])
+#define Ref(T,N) (*(Wire*)T.addr[N])
+#define Wrap(B,W,I) B.addr[I]=(unsigned long int)&W
 
 
 #define gr(N) inputs_grad[N]
@@ -457,11 +458,7 @@ Def->grad = sqr(Def->value- 1.0);
 
 printf("LSE %f\n" ,Def->grad);
 */
-// Wire * a = Wire_new(0, 0);
-// Wire * g = Wire_new(1, 0);
-//
-// Wire *a1 = Wire_new(2,1);
-// Wire *g1 = Wire_new(3,1);
+
 Wire _0 = newWire(0,-0);
 Wire _1 = newWire(1,-1);
 Wire _2 = newWire(2,-2);
@@ -474,21 +471,22 @@ Wrap(bun,_2,2);
 Wrap(bun,_3,3);
 Wrap(bun,_4,4);
 
-Wire *Gimp = Ref(bun,2)
+Wire *Gimp = AdRef(bun,2);
 Gimp->grad = 100;
+// or
+Ref(bun,2).grad = 200;
 
-
-
-//Gimp = &(*(Wire*)bun.addr[3]);
-Gimp = Ref(bun,1);
-
-//printf("value %f\n", **((Wire**)bun.addr[2]+0 ));
 
 printf("grad %f\n", _2.grad);
 printf("Gimp grad %f\n", Gimp->grad);
+printf("Bundle access grad %f\n",Ref(bun,2).value);
+//printf("Bundle access grad %f\n", Ref(bun,0).value);
 
-printf("j haha");
 
+Neuron NN = newNeuron(&bun,&_0);
+NN.outir->value=3;
+
+printf("Change  %f\n", _0.value);
 //
 // Add *add = NEW(Add,"TESt");
 //
