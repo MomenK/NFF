@@ -6,26 +6,26 @@
 
 
 
-Wire Object_forwardpass(void *self, Wire **inputs)
+Wire Neuron_forwardpass(void *self)
 {
     printf("Nothing to forward pass\n" );
     exit;
 }
 
-void Object_backwardpass(void *self)
+void Neuron_backwardpass(void *self)
 {
   printf("Nothing to backpropagate pass\n" );
   exit;
 }
 
-int Object_init(void *self)
+int Neuron_init(void *self)
 {
   return 1;
 }
 
-void Object_destroy(void *self)
+void Neuron_destroy(void *self)
 {
-    Object *obj = self;
+    Neuron *obj = self;
 
     if(obj) {
         free(obj);
@@ -33,18 +33,19 @@ void Object_destroy(void *self)
     //return NULL;
 }
 
-void *Object_new(size_t size, Object proto, char *type)
+void *Neuron_new(size_t size, Neuron proto, char *type,Bundle *inbun, Wire *outir)
 {
 
-    if(!proto.init) proto.init = Object_init;
-    if(!proto.forwardpass) proto.forwardpass = Object_forwardpass;
-    if(!proto.backwardpass) proto.backwardpass = Object_backwardpass;
-    if(!proto.destroy) proto.destroy = Object_destroy;
-    if(!proto.input_size) proto.input_size = 2;
+    if(!proto.init) proto.init = Neuron_init;
+    if(!proto.forwardpass) proto.forwardpass = Neuron_forwardpass;
+    if(!proto.backwardpass) proto.backwardpass = Neuron_backwardpass;
+    if(!proto.destroy) proto.destroy = Neuron_destroy;
 
-    Object *el = calloc(1,size);
+
+    Neuron *el = calloc(1,size);
     *el= proto;
-
+    el->inbun = inbun;
+    el->outir = outir;
     if(!el->init(el)) {
       el->destroy(el);
       return NULL;
@@ -64,12 +65,12 @@ void Wire_destroy(void *self){
 
 void *Wire_new( float value, float grad){
   //if(!proto.destroy) proto.destroy = Wire_destroy;
-//  if(!proto.init) proto.init = Object_init;
+//  if(!proto.init) proto.init = Neuron_init;
 
   Wire *el = calloc(1,sizeof(Wire));
   el->value = value;
   el->destroy = Wire_destroy;
-  el->init = Object_init;
+  el->init = Neuron_init;
   el->grad = grad;
 
   return el;

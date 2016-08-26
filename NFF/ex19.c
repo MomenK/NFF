@@ -9,6 +9,7 @@
 
 #define AdRef(T,N) &(*(Wire*)T.addr[N])
 #define Ref(T,N) (*(Wire*)T.addr[N])
+#define Refp(T,N) (*(Wire*)T->addr[N])
 #define Wrap(B,W,I) B.addr[I]=(unsigned long int)&W
 
 
@@ -108,148 +109,140 @@ printf("%zd\n",sizeof(total)/sizeof(float));
   return total;
 }
 
-Wire Add_forwardpass (void *self, Wire **ppw){
-  Object *obj = self;
-//  float *r;
-  obj->inj = ppw;
-
-
-  float output1 = 0;
-   obj->inputs = malloc(obj->input_size*sizeof(float));
-obj->inputs = *ppw;
-    for (int i =0; i < obj->input_size; i++)
+Wire Add_forwardpass (void *self){
+  Neuron *obj = self;
+  Wire x ; x.value = 0;
+   for (int i =0; i < obj->inbun->size; i++)
       {
-    //  obj->inputs[i]=m[i];
-      printf("input %d :  %f\n",i, obj->inputs[i].value );
-      output1 += obj->inputs[i].value;
+    printf("input %d :  %f\n",i, Refp(obj->inbun,i).value );
+      x.value += Refp(obj->inbun,i).value;
       }
-      Wire x ; x.value = output1;
       return x;
 }
-
+//
 void Add_backwardpass (void *self){
-  Object *obj = self;
-  //obj->inputs_grad = malloc(obj->input_size*sizeof(float));
-  for (int i =0; i < obj->input_size; i++)
+Neuron *obj = self;
+//   //obj->inputs_grad = malloc(obj->input_size*sizeof(float));
+for (int i =0; i < obj->inbun->size; i++)
     {
-printf("grad %d :  %f\n",i, obj->inputs[i].grad );
-    obj->inputs[i].grad = 1*obj->output_grad;
+  Refp(obj->inbun,i).grad += 1* obj->outir->grad;
+  printf("grad %d :  %f\n",i, Refp(obj->inbun,i).grad);
     }
   //  return obj->inputs_grad;
 }
-
-
-Object AddProto= {
+//
+//
+Neuron AddProto= {
   .forwardpass = Add_forwardpass,
   .backwardpass = Add_backwardpass
 };
-
-/*
-
-
-float Mult_forwardpass (void *self, Wire *inputsww){
-  Object *obj = self;
-//  obj->input_size = sizeof(inputsww)/sizeof(float) ;
-//  printf("size I received %zd\n",  sizeof(inputsww)/sizeof(float));
-// THIS DOESN"T WORK BECAUSE IT"S ALWAYS THE SIZE OF THE POINT -> 16 bit "addrees" !
-  float output = 1;
-   obj->inputs = malloc(obj->input_size*sizeof(float));
-   if(obj->input_size != 2)
-   {
-     die("Not Valid input number for a multiply gate!");
-   }
-    for (int i =0; i < obj->input_size; i++)
-      {
-      obj->inputs[i].value=inputsww[i].value;
-    //  printf("%d :%f\n",i, inputsww[i] );
-      output *= obj->inputs[i].value;
-      }
-      obj->output = output;
-      return output;value
-float *Mult_backwardpass (void *self){
-  Object *obj = self;
-  obj->inputs_grad = malloc(obj->input_size*sizeof(float));
-  for (int i =0; i < obj->input_size; i++)
-    {
-    obj->inputs_grad[i] = obj->inputs[1-i].value*obj->output_grad;
-    }
-    return obj->inputs_grad;
-}
-
-
-Object MultProto= {
-  .forwardpass = Mult_forwardpass,
-  .backwardpass = Mult_backwardpass
-};
-
-void *Membership1_New(size_t size, Object proto, float m, float s){ // Need fixing
-
-  if(!proto.init) proto.init = Object_init;
-  if(!proto.forwardpass) proto.forwardpass = Object_forwardpass;
-  if(!proto.backwardpass) proto.backwardpass = Object_backwardpass;
-  if(!proto.destroy) proto.destroy = Object_destroy;
-  if(!proto.input_size) proto.input_size = 2;
-
-  Object *el = calloc(1,size);
-  *el= proto;
-
-  if(!el->init(el)) {
-    el->destroy(el);
-    return NULL;
-  } else {
-    FM1 *fl = calloc( 1 ,sizeof(FM1));
-    fl-> proto = *el;
-    fl->m = m;
-    fl->s = s;
-  //  printf("Initalization: %d\n",fl->_(init)(fl) );
-    return fl;
-  }
-  }
-
-float FM1_forwardpass (void *self, Wire *inputsww){
-  FM1 *obj = self;
-//  obj->input_size = sizeof(inputsww)/sizeof(float) ;
-//  printf("size I received %zd\n",  sizeof(inputsww)/sizeof(float));
-// THIS DOESN"T WORK BECAUSE IT"S ALWAYS THE SIZE OF THE POINT -> 16 bit "addrees" !
-  float output = 0;
-  obj->_(inputs) = malloc(2*sizeof(float));
-  obj->_(inputs_grad) = malloc(2*sizeof(float));
-      obj->_(inputs[0].value)=inputsww[0].value;
-      obj->_(inputs[1].value) = inputsww[1].value;
-   if(obj->_(inputs[1].value)) // None-singleton
-   {
-   obj->fs = solve(obj->_(inputs[0].value), obj->_(inputs[1].value) , obj->m, obj->s);
-   obj->_(inputs_grad[1]) = N(obj->fs + 0.0001, obj->m,obj->s)/0.0001; // Analytic gradient
-    }
-  else
-  {
-    printf("\t\t\t\t\t\t\tsingleton!!\n" );
-    obj->fs = obj->_(inputs[0].value);
-  //  printf("Input is --> %f\n", obj->fs);
-  }
-      obj->_(output) =N(obj->fs, obj->m,obj->s);
-  printf("output is: --> %f\n", obj->_(output));
-      return obj->_(output) ;
-}
-
-
-float *FM1_backwardpass (void *self){
-  FM1 *obj = self;
-  if(!obj->_(inputs_grad))  obj->_(inputs_grad) = malloc(2*sizeof(float));
-      obj->m +=  obj->_(output_grad) * (obj->fs-obj->m) * obj->_(output)/ sqr(obj->s);
-    obj->s +=  obj->_(output_grad) * sqr(obj->fs-obj->m) * obj->_(output) / tri(obj->s);
-
-    // real difficulties with update of obj->fs
-    return obj->_(inputs_grad);
-}
-
-
-Object FM1Proto= {
-  .forwardpass = FM1_forwardpass,
-  .backwardpass = FM1_backwardpass
-};
-
-*/
+//
+// /*
+//
+//
+// float Mult_forwardpass (void *self, Wire *inputsww){
+//   Object *obj = self;
+// //  obj->input_size = sizeof(inputsww)/sizeof(float) ;
+// //  printf("size I received %zd\n",  sizeof(inputsww)/sizeof(float));
+// // THIS DOESN"T WORK BECAUSE IT"S ALWAYS THE SIZE OF THE POINT -> 16 bit "addrees" !
+//   float output = 1;
+//    obj->inputs = malloc(obj->input_size*sizeof(float));
+//    if(obj->input_size != 2)
+//    {
+//      die("Not Valid input number for a multiply gate!");
+//    }
+//     for (int i =0; i < obj->input_size; i++)
+//       {
+//       obj->inputs[i].value=inputsww[i].value;
+//     //  printf("%d :%f\n",i, inputsww[i] );
+//       output *= obj->inputs[i].value;
+//       }
+//       obj->output = output;
+//       return output;value
+// float *Mult_backwardpass (void *self){
+//   Object *obj = self;
+//   obj->inputs_grad = malloc(obj->input_size*sizeof(float));
+//   for (int i =0; i < obj->input_size; i++)
+//     {
+//     obj->inputs_grad[i] = obj->inputs[1-i].value*obj->output_grad;
+//     }
+//     return obj->inputs_grad;
+// }
+//
+//
+// Object MultProto= {
+//   .forwardpass = Mult_forwardpass,
+//   .backwardpass = Mult_backwardpass
+// };
+//
+// void *Membership1_New(size_t size, Object proto, float m, float s){ // Need fixing
+//
+//   if(!proto.init) proto.init = Object_init;
+//   if(!proto.forwardpass) proto.forwardpass = Object_forwardpass;
+//   if(!proto.backwardpass) proto.backwardpass = Object_backwardpass;
+//   if(!proto.destroy) proto.destroy = Object_destroy;
+//   if(!proto.input_size) proto.input_size = 2;
+//
+//   Object *el = calloc(1,size);
+//   *el= proto;
+//
+//   if(!el->init(el)) {
+//     el->destroy(el);
+//     return NULL;
+//   } else {
+//     FM1 *fl = calloc( 1 ,sizeof(FM1));
+//     fl-> proto = *el;
+//     fl->m = m;
+//     fl->s = s;
+//   //  printf("Initalization: %d\n",fl->_(init)(fl) );
+//     return fl;
+//   }
+//   }
+//
+// float FM1_forwardpass (void *self, Wire *inputsww){
+//   FM1 *obj = self;
+// //  obj->input_size = sizeof(inputsww)/sizeof(float) ;
+// //  printf("size I received %zd\n",  sizeof(inputsww)/sizeof(float));
+// // THIS DOESN"T WORK BECAUSE IT"S ALWAYS THE SIZE OF THE POINT -> 16 bit "addrees" !
+//   float output = 0;
+//   obj->_(inputs) = malloc(2*sizeof(float));
+//   obj->_(inputs_grad) = malloc(2*sizeof(float));
+//       obj->_(inputs[0].value)=inputsww[0].value;
+//       obj->_(inputs[1].value) = inputsww[1].value;
+//    if(obj->_(inputs[1].value)) // None-singleton
+//    {
+//    obj->fs = solve(obj->_(inputs[0].value), obj->_(inputs[1].value) , obj->m, obj->s);
+//    obj->_(inputs_grad[1]) = N(obj->fs + 0.0001, obj->m,obj->s)/0.0001; // Analytic gradient
+//     }
+//   else
+//   {
+//     printf("\t\t\t\t\t\t\tsingleton!!\n" );
+//     obj->fs = obj->_(inputs[0].value);
+//   //  printf("Input is --> %f\n", obj->fs);
+//   }
+//       obj->_(output) =N(obj->fs, obj->m,obj->s);
+//   printf("output is: --> %f\n", obj->_(output));
+//       return obj->_(output) ;
+// }
+//
+//
+// float *FM1_backwardpass (void *self){
+//   FM1 *obj = self;
+//   if(!obj->_(inputs_grad))  obj->_(inputs_grad) = malloc(2*sizeof(float));
+//       obj->m +=  obj->_(output_grad) * (obj->fs-obj->m) * obj->_(output)/ sqr(obj->s);
+//     obj->s +=  obj->_(output_grad) * sqr(obj->fs-obj->m) * obj->_(output) / tri(obj->s);
+//
+//     // real difficulties with update of obj->fs
+//     return obj->_(inputs_grad);
+// }
+//
+//
+// Object FM1Proto= {
+//   .forwardpass = FM1_forwardpass,
+//   .backwardpass = FM1_backwardpass
+// };
+//
+// */
 
 void *Wirejoin( Wire ** a, Wire ** b, size_t n,size_t m) // recieves pp from p addrss
 {
@@ -268,6 +261,7 @@ printf("%f\n", obj[i].value );
 //for(int j=0; j<m ;j++)
 //{
 obj[n]= **(b);
+
 
 * (b) = &obj[n];
 //}j1[0].grad
@@ -290,216 +284,52 @@ int main(int argc, char *argv[])
   //TODO all gates Must recieved wires!
   //*************************************Initialization ***********************************
   float step_size = 0.01;
-/*
 
-  Wire b[2];  b[0].value = 1;  b[1].value = 0;
-  Wire t[2]; t[0].value =0; t[1].value = 0;
-
-//********************************Layer 1: Fuzzy Memebership
-
-  FM1 *Bi_Z = NEWFM1(FM1,  0, 0.2); //TODO: Relate with input size;
-  FM1 *Bi_L = NEWFM1(FM1,0.5, 0.2);
-  FM1 *Bi_H = NEWFM1(FM1,  1, 0.2);
-
-j1[0].grad
-  FM1 *Tr_Z = NEWFM1(FM1,  0, 0.2);
-  FM1 *Tr_L = NEWFM1(FM1,0.5, 0.2);
-  FM1 *Tr_H = NEWFM1(FM1,  1, 0.2);
-
-  Wire *bz = Wire_new(0,0);
-  Wire *bl = Wire_new(0,0);
-  Wire *bh = Wire_new(0,0);
-
-  Wire *tz = Wire_new(0,0);
-  Wire *tl = Wire_new(0,0);
-  Wire *th = Wire_new(0,0);
-
-//********************************Layer 2: Rules
-Mult *R1 = NEW(Mult, "Z & Z"); //Z
-Wire * r1; // TODO: add this as a property of eac
-Mult *R2 = NEW(Mult, "Z & L"); //NL
-Wire * r2;
-Mult *R3 = NEW(Mult, "Z & H"); //NH
-Wire * r3;
-
-Mult *R4 = NEW(Mult, "L & Z"); //PL
-Wire * r4;
-Mult *R5 = NEW(Mult, "L & L"); //Z
-Wire * r5;
-Mult *R6 = NEW(Mult, "L & H"); //NL
-Wire * r6;
-
-Mult *R7 = NEW(Mult, "H & Z"); //PH
-Wire *r7;
-Mult *R8 = NEW(Mult, "H & L"); //PL
-Wire *r8;
-Mult *R9 = NEW(Mult, "H & H"); //Z
-Wire *r9;
-
-//**************************************Layer 3: Pre-gates
-Mult *M1 = NEW(Mult, "Seguneo First output"); M1->c = 0;
-Wire *m1;
-
-Mult *M2 = NEW(Mult, "Seguneo First output"); M2->c = 0;
-Wire *m2;
-
-Mult *M3 = NEW(Mult, "Seguneo First output"); M3->c = 0;
-Wire *m3;
-
-Mult *M4 = NEW(Mult, "Seguneo First output"); M4->c = 0;
-Wire *m4;
-
-Mult *M5 = NEW(Mult, "Seguneo First output"); M5->c = 0;
-Wire *m5;
-
-Mult *M6 = NEW(Mult, "Seguneo First output"); M6->c = 0;
-Wire *m6;
-
-Mult *M7 = NEW(Mult, "Seguneo First output"); M7->c = 0;
-Wire *m7;
-
-Mult *M8 = NEW(Mult, "Seguneo First output"); M8->c = 0;
-Wire *m8;
-
-Mult *M9 = NEW(Mult, "Seguneo First output"); M9->c = 0;
-Wire *m9;
-
-// TODO: MUST BE ABLE TO BETTER CONNECT THESE WITH THE RULES OUTPUT.. THE RULES
-// MUST NOT BE PRE-DETERMINED, LAYER 3 IS DOGSHIT
-
-Wire *o2 = Wire_new(0,0);
-Wire *o3 = Wire_new(0,0);
-Wire *o4 = Wire_new(0,0);
-Wire *o5 = Wire_new(0,0);
-Wire *o6 = Wire_new(0,0);
-Wire *o7 = Wire_new(0,0);
-Wire *o8 = Wire_new(0,0);
-Wire *o9 = Wire_new(0,0);
-
-float O1 = 0.5;
-float O2 = 0.25;
-float O3 = 0;
-float O4 = 0.75;
-float O5 = 0.5;
-float O6 = 0.25;
-float O7 = 1;
-float O8 = 0.75;
-float O9 = 0.5;
-
-
-Wire * Def = Wire_new(0,0);
-float N;printf("g %f\n" ,g->value);
-printf("j %f\n" ,j[1].value);
-
-//Wire *rr;
-
-    /* code */
-  //*********************************************forwardpass
-  /*
-  printf("\t\t Gate B\n" );
-bz->value =Bi_Z->_(forwardpass)(Bi_Z, b);Mult *M9 = NEW(Mult, "Seguneo First output"); M9->c = 0;
-  printf("\t\t Gate T\n" );
-tz->value=Tr_Z->_(forwardpass)(Tr_Z, t);
-tl->value=Tr_L->_(forwardpass)(Tr_L, t);
-th->value=Tr_H->_(forwardpass)(Tr_H, t);
-
-
-
- r1 = Wirejoin(bz,tz,1);
- r2 = Wirejoin(bz,tl,1);
- r3 = Wirejoin(bz,th,1);
- r4 = Wirejoin(bl,tz,1);
- r5 = Wirejoin(bl,tl,1);
- r6 = Wirejoin(bl,th,1);
- r7 = Wirejoin(bh,tz,1);
- r8 = Wirejoin(bh,tl,1);
- r9 = Wirejoin(bh,th,1);
- //ll
-//printf("Value %f\n" ,r1[9].value);
-
-
-o1->value  = R1->_(forwardpass)(R1,r1);
-o2->value  = R2->_(forwardpass)(R2,r2);
-o3->value  = R3->_(forwardpass)(R3,r3);
-o4->value  = R4->_(forwardpass)(R4,r4);
-o5->value  = R5->_(forwardpass)(R5,r5);
-o6->value  = R6->_(forwardpass)(R6,r6);
-o7->value  = R7->_(forwardpass)(R7,r7);
-o8->value  = R8->_(forwardpass)(R8,r8);
-o9->value  = R9->_(forwardpass)(R9,r9);
-
-//***********************************defuzzification
-
-
-Def->value =  o1->value * O1 +
-              o2->value * O2 +
-              o3->value * O3 +
-              o4->value * O4 +
-              o5->value * O5 +
-              o6->value * O6 +
-              o7->value * O7 +
-              o8->value * O8 +
-              o9->value * O9;
-
-N =           o1->value +
-              o2->value +
-              o3->value +
-              o4->value +
-              o5->value +
-              o6->value +
-              o7->value +
-              o8->value +
-              o9->value ;
-
-printf("OUTPUT %f\n" ,Def->value);
-
-
-Def->grad = sqr(Def->value- 1.0);
-
-printf("LSE %f\n" ,Def->grad);
-*/
-
+// This is How to create Wires
 Wire _0 = newWire(0,-0);
 Wire _1 = newWire(1,-1);
 Wire _2 = newWire(2,-2);
 Wire _3 = newWire(3,-3);
 Wire _4 = newWire(4,-4);
 
+// This is how to bundle Wires
 Bundle bun = newBundle(5);
+Wrap(bun,_0,0);
 Wrap(bun,_1,1);
 Wrap(bun,_2,2);
 Wrap(bun,_3,3);
 Wrap(bun,_4,4);
 
+// This is How to reference bundles
 Wire *Gimp = AdRef(bun,2);
 Gimp->grad = 100;
 // or
 Ref(bun,2).grad = 200;
 
 
+
+// This is how they all point to the same data
 printf("grad %f\n", _2.grad);
 printf("Gimp grad %f\n", Gimp->grad);
 printf("Bundle access grad %f\n",Ref(bun,2).value);
-//printf("Bundle access grad %f\n", Ref(bun,0).value);
 
 
-Neuron NN = newNeuron(&bun,&_0);
-NN.outir->value=3;
+//This is how you create gates
+Wire eat = newWire(0,1);
+Neuron NN = newNeuron(&bun,&eat);
+eat = Add_forwardpass(&NN);
+Add_backwardpass(&NN);
+printf("Change  %zu\n", NN.inbun->size);
+printf("I'm hungry for  %f neurons\n", eat.value);
 
-printf("Change  %f\n", _0.value);
-//
-// Add *add = NEW(Add,"TESt");
-//
-// printf("the out of add gate is %f\n",add->_(forwardpass)(add,&j1).value );
-// printf("grad of first input is %f\n",j1[0].grad );
-// printf("grad of second input is %f\n",j1[1].grad);
-// add->_(output_grad) = 7;
-// add->_(backwardpass)(add);
-//
-// printf("grad of first input is %f\n",j1[0].grad);
-// printf("grad of second input is %f\n",j1[1].grad);
-//j[1].value = 5;
-//g->value = 19;
+Wire drink = newWire(0,1);
+Add *NM = NEW(Add,"Somecrap",&bun,&drink);
+drink = NM->_(forwardpass)(NM);
+NM->_(backwardpass)(NM);
+printf("Change  for pointer%zu\n", NM->_(inbun)->size);
+printf("I'm hungry for  %f neurons Pointers\n", drink.value);
+
+
 
 
 

@@ -21,38 +21,47 @@ typedef struct{
 
 Bundle newBundle(size_t N);
 
+// typedef struct{
+//   Bundle *inbun; // MAke this crap wires to keep the pointers addresses
+//   Wire *outir;
+//
+//   int (*init)(void *self);
+//   Wire (*forwardpass) (void *self);
+//   void (*backwardpass) (void *self);
+//   void (*destroy)(void *self);
+// }Neuron;
+//
+//Neuron newNeuron(Bundle *inbun, Wire *outir);
+//
+// void Neuron_destroy(void *self);
+// int Neuron_init(void *self);
+// Wire Neuron_forwardpass (void *self);
+// void Neuron_backwardpass (void *self);
+// void *Neuron_new(size_t size, Neuron proto, char *type);
+
+
 typedef struct{
   Bundle *inbun; // MAke this crap wires to keep the pointers addresses
   Wire *outir;
+
+int (*init)(void *self);
+Wire (*forwardpass) (void *self);
+void (*backwardpass) (void *self);
+void (*destroy)(void *self);
+
 }Neuron;
 
 Neuron newNeuron(Bundle *inbun, Wire *outir);
 
-typedef struct{
-Wire **inj; // MAke this crap wires to keep the pointers addresses
-Wire *inputs;
-float output;
-int input_size;
-float *inputs_grad;
-float output_grad;
-
-int (*init)(void *self);
-Wire (*forwardpass) (void *self, Wire **inputs);
-void (*backwardpass) (void *self);
-void (*destroy)(void *self);
-
-}Object;
-
-
-void Object_destroy(void *self);
-int Object_init(void *self);
-Wire Object_forwardpass (void *self, Wire **inputs);
-void Object_backwardpass (void *self);
-void *Object_new(size_t size, Object proto, char *type); // TO DO : Kill and replace
+void Neuron_destroy(void *self);
+int Neuron_init(void *self);
+Wire Neuron_forwardpass (void *self);
+void Neuron_backwardpass (void *self);
+void *Neuron_new(size_t size, Neuron proto, char *type,Bundle *inbun, Wire *outir); // TO DO : Kill and replace
 
 
 
 
-#define NEW(T, N) Object_new(sizeof(T), T##Proto, N)
+#define NEW(T, N,M,W) Neuron_new(sizeof(T), T##Proto, N,M,W)
 #define _(N) proto.N
 #endif
