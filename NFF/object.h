@@ -12,6 +12,13 @@ typedef struct{
 void Wire_destroy(void *self);
 void *Wire_new( float value, float grad);
 
+
+typedef struct{
+  unsigned long int *addr;
+  size_t size;
+} Bundle;
+
+
 typedef struct{
 Wire **inj; // MAke this crap wires to keep the pointers addresses
 Wire *inputs;

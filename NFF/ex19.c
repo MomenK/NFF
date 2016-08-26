@@ -104,21 +104,20 @@ printf("%zd\n",sizeof(total)/sizeof(float));
 
 Wire Add_forwardpass (void *self, Wire **ppw){
   Object *obj = self;
-  float *r;
+//  float *r;
   obj->inj = ppw;
 
 
-  float output = 0;
+  float output1 = 0;
    obj->inputs = malloc(obj->input_size*sizeof(float));
 obj->inputs = *ppw;
     for (int i =0; i < obj->input_size; i++)
       {
     //  obj->inputs[i]=m[i];
       printf("input %d :  %f\n",i, obj->inputs[i].value );
-      output += obj->inputs[i].value;
+      output1 += obj->inputs[i].value;
       }
-      obj->output = output;
-      Wire x ; x.value = output;
+      Wire x ; x.value = output1;
       return x;
 }
 
@@ -277,23 +276,6 @@ void Cha( Wire *self)
   Wire * m =self;
   m->value=9;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -470,33 +452,55 @@ Def->grad = sqr(Def->value- 1.0);
 
 printf("LSE %f\n" ,Def->grad);
 */
-Wire * a = Wire_new(0, 0);
-Wire * g = Wire_new(1, 0);
+// Wire * a = Wire_new(0, 0);
+// Wire * g = Wire_new(1, 0);
+//
+// Wire *a1 = Wire_new(2,1);
+// Wire *g1 = Wire_new(3,1);
 
-Wire *a1 = Wire_new(2,1);
-Wire *g1 = Wire_new(3,1);
+Wire a; a.value = 0; a.grad = 0;
 
-Wire * j;
-Wire * j1;
+Wire b; b.value = 1; b.grad = -1;
 
+Wire c; c.value = 2; c.grad = -2;
 
-j = Wirejoin(&a,&g,1,1);
-j1 = Wirejoin(&a1, &g1,1,1);
-
-printf("j %f\n" ,j1[0].value);
-printf("j %f\n" ,j1[1].value);
+Wire d; d.value = 3; d.grad = -3;
 
 
-Add *add = NEW(Add,"TESt");
+//j = Wirejoin(&a,&g,1,1);
+//j1 = Wirejoin(&a1, &g1,1,1);
 
-printf("the out of add gate is %f\n",add->_(forwardpass)(add,&j1).value );
-printf("grad of first input is %f\n",j1[0].grad );
-printf("grad of second input is %f\n",j1[1].grad);
-add->_(output_grad) = 7;
-add->_(backwardpass)(add);
+Bundle bun;
+bun.size = 5;
+bun.addr = calloc(5, sizeof(Wire));
+bun.addr[0] = (unsigned long int)&a;
+bun.addr[1] = (unsigned long int)&b;
+bun.addr[2] = (unsigned long int)&c;
+bun.addr[3] = (unsigned long int)&d;
 
-printf("grad of first input is %f\n",j1[0].grad);
-printf("grad of second input is %f\n",j1[1].grad);
+Wire *Gimp = &(*(Wire*)bun.addr[2]);
+Gimp->grad = 100;
+
+Gimp = &(*(Wire*)bun.addr[3]);
+
+//printf("value %f\n", **((Wire**)bun.addr[2]+0 ));
+
+printf("grad %f\n", c.grad);
+printf("Gimp grad %f\n", Gimp->grad);
+
+printf("j haha");
+
+//
+// Add *add = NEW(Add,"TESt");
+//
+// printf("the out of add gate is %f\n",add->_(forwardpass)(add,&j1).value );
+// printf("grad of first input is %f\n",j1[0].grad );
+// printf("grad of second input is %f\n",j1[1].grad);
+// add->_(output_grad) = 7;
+// add->_(backwardpass)(add);
+//
+// printf("grad of first input is %f\n",j1[0].grad);
+// printf("grad of second input is %f\n",j1[1].grad);
 //j[1].value = 5;
 //g->value = 19;
 
