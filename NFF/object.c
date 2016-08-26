@@ -75,3 +75,19 @@ void *Wire_new( float value, float grad){
   return el;
 
 }
+
+Wire newWire(float value, float grad)
+{
+
+Wire Gimp; Gimp.value = value; Gimp.grad= grad;
+
+return Gimp;
+}
+
+Bundle newBundle( size_t N)
+{
+  Bundle bun;
+bun.size = N;
+bun.addr = calloc(N, sizeof(Wire));
+return bun;
+}

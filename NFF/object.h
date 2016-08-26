@@ -11,6 +11,7 @@ typedef struct{
 
 void Wire_destroy(void *self);
 void *Wire_new( float value, float grad);
+Wire newWire(float value, float grad);
 
 
 typedef struct{
@@ -18,6 +19,7 @@ typedef struct{
   size_t size;
 } Bundle;
 
+Bundle newBundle(size_t N);
 
 typedef struct{
 Wire **inj; // MAke this crap wires to keep the pointers addresses
@@ -47,38 +49,3 @@ void *Object_new(size_t size, Object proto, char *type); // TO DO : Kill and rep
 #define NEW(T, N) Object_new(sizeof(T), T##Proto, N)
 #define _(N) proto.N
 #endif
-
-/*
-
-float forwardpass_add(void *self)
-{
-Object *obj = self;
-float output = 0;
-  for (int i =0; i < obj.input_size; i++)
-    {
-    ouput += inputs[i];
-    }
-    obj.output = output;
-    return output;
-}
-
-should be in implementation part
-float *backwardpass_add(void *self, float output_grad)
-{
-Object *obj = self;
-for (int i =0; i < obj.input_size; i++)
-  {
-  obj.input_grad[i] = 1*output_grad;
-  }
-}
-
-
-void *Object_new(size_t size, Object proto,float *inputs, char type)
-{
-  switch (type)
-  {
-    case 'a':
-    if(!proto.forwardpass) proto.forwardpass = forwardpass_add;
-  }
-}
-*/

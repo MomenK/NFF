@@ -6,6 +6,11 @@
 #include <math.h>
 #include "ex19.h"
 
+
+#define Ref(T,N) &(*(Wire*)T.addr[N]);
+#define Wrap(B,W,I) B.addr[I]=(unsigned long int)&W;
+
+
 #define gr(N) inputs_grad[N]
 #define sqr(N) \
       ({  __typeof__ (N) _N = (N); \
@@ -457,35 +462,29 @@ printf("LSE %f\n" ,Def->grad);
 //
 // Wire *a1 = Wire_new(2,1);
 // Wire *g1 = Wire_new(3,1);
+Wire _0 = newWire(0,-0);
+Wire _1 = newWire(1,-1);
+Wire _2 = newWire(2,-2);
+Wire _3 = newWire(3,-3);
+Wire _4 = newWire(4,-4);
 
-Wire a; a.value = 0; a.grad = 0;
+Bundle bun = newBundle(5);
+Wrap(bun,_1,1);
+Wrap(bun,_2,2);
+Wrap(bun,_3,3);
+Wrap(bun,_4,4);
 
-Wire b; b.value = 1; b.grad = -1;
-
-Wire c; c.value = 2; c.grad = -2;
-
-Wire d; d.value = 3; d.grad = -3;
-
-
-//j = Wirejoin(&a,&g,1,1);
-//j1 = Wirejoin(&a1, &g1,1,1);
-
-Bundle bun;
-bun.size = 5;
-bun.addr = calloc(5, sizeof(Wire));
-bun.addr[0] = (unsigned long int)&a;
-bun.addr[1] = (unsigned long int)&b;
-bun.addr[2] = (unsigned long int)&c;
-bun.addr[3] = (unsigned long int)&d;
-
-Wire *Gimp = &(*(Wire*)bun.addr[2]);
+Wire *Gimp = Ref(bun,2)
 Gimp->grad = 100;
 
-Gimp = &(*(Wire*)bun.addr[3]);
+
+
+//Gimp = &(*(Wire*)bun.addr[3]);
+Gimp = Ref(bun,1);
 
 //printf("value %f\n", **((Wire**)bun.addr[2]+0 ));
 
-printf("grad %f\n", c.grad);
+printf("grad %f\n", _2.grad);
 printf("Gimp grad %f\n", Gimp->grad);
 
 printf("j haha");
