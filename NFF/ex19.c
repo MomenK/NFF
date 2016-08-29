@@ -5,7 +5,7 @@
 #include <time.h>
 #include <math.h>
 #include "ex19.h"
-
+float step_size = 0.01;
 
 #define AdRef(T,N) &(*(Wire*)T.addr[N])
 #define Ref(T,N) (*(Wire*)T.addr[N])
@@ -25,12 +25,11 @@
        __typeof__ (b) _b = (b); \
      _a > _b ? _a : _b; })
 
-  float e(float n){return expf(n);}
+float e(float n){return expf(n);}
 
   float N (float x, float m, float v)
      {
        return e(-0.5 * sqr((x-m)/v));
-
      }
 
 
@@ -109,26 +108,26 @@ printf("%zd\n",sizeof(total)/sizeof(float));
   return total;
 }
 
-Wire Add_forwardpass (void *self){
+/////////////////////////////////////////ADD
+void Add_forwardpass (void *self){
   Neuron *obj = self;
-  Wire x ; x.value = 0;
+  obj->outir->value = 0;
    for (int i =0; i < obj->inbun->size; i++)
       {
     printf("input %d :  %f\n",i, Refp(obj->inbun,i).value );
-      x.value += Refp(obj->inbun,i).value;
+      obj->outir->value += Refp(obj->inbun,i).value;
       }
-      return x;
+
 }
 //
 void Add_backwardpass (void *self){
 Neuron *obj = self;
-//   //obj->inputs_grad = malloc(obj->input_size*sizeof(float));
 for (int i =0; i < obj->inbun->size; i++)
     {
   Refp(obj->inbun,i).grad += 1* obj->outir->grad;
   printf("grad %d :  %f\n",i, Refp(obj->inbun,i).grad);
+    Refp(obj->inbun,i).grad =0;
     }
-  //  return obj->inputs_grad;
 }
 //
 //
@@ -137,69 +136,84 @@ Neuron AddProto= {
   .backwardpass = Add_backwardpass
 };
 //
-// /*
 //
+// //
+void Mult_forwardpass (void *self){
+  Neuron *obj = self;
+  obj->outir->value = 1;
+   for (int i =0; i < obj->inbun->size; i++)
+      {
+    printf("Multple gate :input %d :  %f\n",i, Refp(obj->inbun,i).value );
+      obj->outir->value *= Refp(obj->inbun,i).value;
+      Refp(obj->inbun,i).grad =0;
+      }
+
+}
+
+void Mult_backwardpass (void *self){
+
+  Neuron *obj = self;
+  float x =1;
+  //   //obj->inputs_grad = malloc(obj->input_size*sizeof(float));
+  for (int i =0; i < obj->inbun->size; i++)
+      {
+    Refp(obj->inbun,i).grad +=  (obj->outir->value/Refp(obj->inbun,i).value)* obj->outir->grad;
+    printf("grad %d :  %f\n",i, Refp(obj->inbun,i).grad);
+      }
+
+}
+
+
+Neuron MultProto= {
+  .forwardpass = Mult_forwardpass,
+  .backwardpass = Mult_backwardpass
+};
 //
-// float Mult_forwardpass (void *self, Wire *inputsww){
-//   Object *obj = self;
-// //  obj->input_size = sizeof(inputsww)/sizeof(float) ;
-// //  printf("size I received %zd\n",  sizeof(inputsww)/sizeof(float));
-// // THIS DOESN"T WORK BECAUSE IT"S ALWAYS THE SIZE OF THE POINT -> 16 bit "addrees" !
-//   float output = 1;
-//    obj->inputs = malloc(obj->input_size*sizeof(float));
-//    if(obj->input_size != 2)
-//    {
-//      die("Not Valid input number for a multiply gate!");
-//    }
-//     for (int i =0; i < obj->input_size; i++)
-//       {
-//       obj->inputs[i].value=inputsww[i].value;
-//     //  printf("%d :%f\n",i, inputsww[i] );
-//       output *= obj->inputs[i].value;
-//       }
-//       obj->output = output;
-//       return output;value
-// float *Mult_backwardpass (void *self){
-//   Object *obj = self;
-//   obj->inputs_grad = malloc(obj->input_size*sizeof(float));
-//   for (int i =0; i < obj->input_size; i++)
-//     {
-//     obj->inputs_grad[i] = obj->inputs[1-i].value*obj->output_grad;
-//     }
-//     return obj->inputs_grad;
-// }
+void *Membership1_New(size_t size, Neuron proto, float m, float s,char *type,Bundle *inbun, Wire *outir){ // Need fixing
+
+  if(!proto.init) proto.init = Neuron_init;
+  if(!proto.forwardpass) proto.forwardpass = Neuron_forwardpass;
+  if(!proto.backwardpass) proto.backwardpass = Neuron_backwardpass;
+  if(!proto.destroy) proto.destroy = Neuron_destroy;
+
+  Neuron *el = calloc(1,size);
+  *el= proto;
+  el->inbun = inbun;
+  el->outir = outir;
+
+  if(!el->init(el)) {
+    el->destroy(el);
+    return NULL;
+  } else {
+    FM1 *fl = calloc( 1 ,sizeof(FM1));
+    fl-> proto = *el;
+    fl->m = m;
+    fl->s = s;
+    free(el);
+  //  printf("Initalization: %d\n",fl->_(init)(fl) );
+    return fl;
+  }
+  }
+
+void FM1_forwardpass (void *self){
+
+  FM1 *obj = self; //all things are referenced annoynamsuley
+  obj->_(outir)->value = 0;
+if(Refp(obj->_(inbun),1).value)
+{
+obj->fs = solve(Refp(obj->_(inbun),0).value, Refp(obj->_(inbun),1).value , obj->m, obj->s);
+}
+else{
+  printf("\t\t\t\t\t\t\tsingleton!!\n" );
+  obj->fs = Refp(obj->_(inbun),0).value;
+  printf("%f\n",obj->fs );
+}
+obj->_(outir)->value =N(obj->fs, obj->m,obj->s);
+printf("output is: --> %f\n", obj->_(outir)->value);
+
+
+
 //
-//
-// Object MultProto= {
-//   .forwardpass = Mult_forwardpass,
-//   .backwardpass = Mult_backwardpass
-// };
-//
-// void *Membership1_New(size_t size, Object proto, float m, float s){ // Need fixing
-//
-//   if(!proto.init) proto.init = Object_init;
-//   if(!proto.forwardpass) proto.forwardpass = Object_forwardpass;
-//   if(!proto.backwardpass) proto.backwardpass = Object_backwardpass;
-//   if(!proto.destroy) proto.destroy = Object_destroy;
-//   if(!proto.input_size) proto.input_size = 2;
-//
-//   Object *el = calloc(1,size);
-//   *el= proto;
-//
-//   if(!el->init(el)) {
-//     el->destroy(el);
-//     return NULL;
-//   } else {
-//     FM1 *fl = calloc( 1 ,sizeof(FM1));
-//     fl-> proto = *el;
-//     fl->m = m;
-//     fl->s = s;
-//   //  printf("Initalization: %d\n",fl->_(init)(fl) );
-//     return fl;
-//   }
-//   }
-//
-// float FM1_forwardpass (void *self, Wire *inputsww){
 //   FM1 *obj = self;
 // //  obj->input_size = sizeof(inputsww)/sizeof(float) ;
 // //  printf("size I received %zd\n",  sizeof(inputsww)/sizeof(float));
@@ -212,7 +226,7 @@ Neuron AddProto= {
 //    if(obj->_(inputs[1].value)) // None-singleton
 //    {
 //    obj->fs = solve(obj->_(inputs[0].value), obj->_(inputs[1].value) , obj->m, obj->s);
-//    obj->_(inputs_grad[1]) = N(obj->fs + 0.0001, obj->m,obj->s)/0.0001; // Analytic gradient
+//    obj->_(inputs_grad[1]) = N(obj->fs + 0.0001, obj->m,obj->s)/0.0001; // Analytic gradient why HERE??
 //     }
 //   else
 //   {
@@ -223,25 +237,34 @@ Neuron AddProto= {
 //       obj->_(output) =N(obj->fs, obj->m,obj->s);
 //   printf("output is: --> %f\n", obj->_(output));
 //       return obj->_(output) ;
-// }
+}
+
 //
+void FM1_backwardpass (void *self){
+
+  FM1 *obj = self; //all things are referenced annoynamsuley
+
+if(Refp(obj->_(inbun),1).value)
+Refp(obj->_(inbun),1).grad= N(obj->fs + 0.0001, obj->m,obj->s)/0.0001; // Analytic gradient
+
+obj->m +=  obj->_(outir)->grad * (obj->fs-obj->m) * obj->_(outir)->value/ sqr(obj->s);
+obj->s +=  step_size*(obj->_(outir)->grad * sqr(obj->fs-obj->m) * obj->_(outir)->value/ tri(obj->s));
+
+
 //
-// float *FM1_backwardpass (void *self){
-//   FM1 *obj = self;
-//   if(!obj->_(inputs_grad))  obj->_(inputs_grad) = malloc(2*sizeof(float));
-//       obj->m +=  obj->_(output_grad) * (obj->fs-obj->m) * obj->_(output)/ sqr(obj->s);
+// obj->m +=  obj->_(output_grad) * (obj->fs-obj->m) * obj->_(output)/ sqr(obj->s);
 //     obj->s +=  obj->_(output_grad) * sqr(obj->fs-obj->m) * obj->_(output) / tri(obj->s);
 //
 //     // real difficulties with update of obj->fs
 //     return obj->_(inputs_grad);
-// }
-//
-//
-// Object FM1Proto= {
-//   .forwardpass = FM1_forwardpass,
-//   .backwardpass = FM1_backwardpass
-// };
-//
+}
+
+
+Neuron FM1Proto= {
+  .forwardpass = FM1_forwardpass,
+  .backwardpass = FM1_backwardpass
+};
+
 // */
 
 void *Wirejoin( Wire ** a, Wire ** b, size_t n,size_t m) // recieves pp from p addrss
@@ -279,18 +302,20 @@ void Cha( Wire *self)
 
 
 
+
 int main(int argc, char *argv[])
 {
   //TODO all gates Must recieved wires!
-  //*************************************Initialization ***********************************
-  float step_size = 0.01;
 
+
+
+//*************************************Initialization **************************
 // This is How to create Wires
-Wire _0 = newWire(0,-0);
-Wire _1 = newWire(1,-1);
-Wire _2 = newWire(2,-2);
-Wire _3 = newWire(3,-3);
-Wire _4 = newWire(4,-4);
+Wire _0 = newWire(0.5,0);
+Wire _1 = newWire(1,0);
+Wire _2 = newWire(2,0);
+Wire _3 = newWire(3,0);
+Wire _4 = newWire(4,0);
 
 // This is how to bundle Wires
 Bundle bun = newBundle(5);
@@ -302,9 +327,9 @@ Wrap(bun,_4,4);
 
 // This is How to reference bundles
 Wire *Gimp = AdRef(bun,2);
-Gimp->grad = 100;
-// or
-Ref(bun,2).grad = 200;
+// Gimp->grad = 200;
+// // or
+// Ref(bun,2).grad = 100;
 
 
 
@@ -315,19 +340,42 @@ printf("Bundle access grad %f\n",Ref(bun,2).value);
 
 
 //This is how you create gates
+
 Wire eat = newWire(0,1);
 Neuron NN = newNeuron(&bun,&eat);
-eat = Add_forwardpass(&NN);
+Add_forwardpass(&NN); // not needed!
 Add_backwardpass(&NN);
 printf("Change  %zu\n", NN.inbun->size);
 printf("I'm hungry for  %f neurons\n", eat.value);
 
 Wire drink = newWire(0,1);
 Add *NM = NEW(Add,"Somecrap",&bun,&drink);
-drink = NM->_(forwardpass)(NM);
+NM->_(forwardpass)(NM);
 NM->_(backwardpass)(NM);
 printf("Change  for pointer%zu\n", NM->_(inbun)->size);
-printf("I'm hungry for  %f neurons Pointers\n", drink.value);
+printf("I'm thristy for  %f neurons Pointers\n", drink.value);
+
+printf("Testing Multiple gate \n");
+Wire sleep = newWire(0,1);
+Mult *FM = NEW(Mult,"first multiplication",&bun,&sleep);
+FM->_(forwardpass)(FM);
+FM->_(backwardpass)(FM);
+printf("I'm dizzy for  %f neurons Pointers\n", sleep.value);
+
+Wire _bicep = newWire(0.7,0);
+Wire _bicn = newWire(0,0);
+ Bundle bunf = newBundle(2);
+ Wrap(bunf,_bicep,0);
+ Wrap(bunf,_bicn,1);
+
+ Wire run = newWire(0,1);
+
+FM1 *B = NEWFM1(FM1,0.5,0.2,"big",&bunf,&run);
+for(int i=0;i<10;i++)
+{
+B->_(forwardpass)(B);
+B->_(backwardpass)(B);
+}
 
 
 

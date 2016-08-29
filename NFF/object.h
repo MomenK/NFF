@@ -21,31 +21,13 @@ typedef struct{
 
 Bundle newBundle(size_t N);
 
-// typedef struct{
-//   Bundle *inbun; // MAke this crap wires to keep the pointers addresses
-//   Wire *outir;
-//
-//   int (*init)(void *self);
-//   Wire (*forwardpass) (void *self);
-//   void (*backwardpass) (void *self);
-//   void (*destroy)(void *self);
-// }Neuron;
-//
-//Neuron newNeuron(Bundle *inbun, Wire *outir);
-//
-// void Neuron_destroy(void *self);
-// int Neuron_init(void *self);
-// Wire Neuron_forwardpass (void *self);
-// void Neuron_backwardpass (void *self);
-// void *Neuron_new(size_t size, Neuron proto, char *type);
-
 
 typedef struct{
   Bundle *inbun; // MAke this crap wires to keep the pointers addresses
   Wire *outir;
 
 int (*init)(void *self);
-Wire (*forwardpass) (void *self);
+void (*forwardpass) (void *self);
 void (*backwardpass) (void *self);
 void (*destroy)(void *self);
 
@@ -55,7 +37,7 @@ Neuron newNeuron(Bundle *inbun, Wire *outir);
 
 void Neuron_destroy(void *self);
 int Neuron_init(void *self);
-Wire Neuron_forwardpass (void *self);
+void Neuron_forwardpass (void *self);
 void Neuron_backwardpass (void *self);
 void *Neuron_new(size_t size, Neuron proto, char *type,Bundle *inbun, Wire *outir); // TO DO : Kill and replace
 

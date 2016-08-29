@@ -6,7 +6,7 @@
 
 
 
-Wire Neuron_forwardpass(void *self)
+void Neuron_forwardpass(void *self)
 {
     printf("Nothing to forward pass\n" );
     exit;
@@ -55,6 +55,14 @@ void *Neuron_new(size_t size, Neuron proto, char *type,Bundle *inbun, Wire *outi
 }
 
 
+Neuron newNeuron(Bundle *inbun, Wire *outir)
+{
+  Neuron Neu;
+  Neu.inbun = inbun;
+  Neu.outir = outir;
+  return Neu;
+
+}
 
 void Wire_destroy(void *self){
   Wire *wr = self;
@@ -91,13 +99,4 @@ Bundle newBundle( size_t N)
 bun.size = N;
 bun.addr = calloc(N, sizeof(Wire));
 return bun;
-}
-
-Neuron newNeuron(Bundle *inbun, Wire *outir)
-{
-  Neuron Neu;
-  Neu.inbun = inbun;
-  Neu.outir = outir;
-  return Neu;
-
 }

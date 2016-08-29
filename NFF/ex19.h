@@ -8,34 +8,33 @@ struct Add {
 };
 
 typedef struct Add Add;
-Wire Add_forwardpass (void *self);
+void Add_forwardpass (void *self);
 void Add_backwardpass (void *self);
-/*
+
 struct Mult {
   Neuron proto;
-  //int input_size;
-  float c;
 };
 
 typedef struct Mult Mult;
+void Mult_forwardpass (void *self);
+void Mult_backwardpass (void *self);
 
-Wire Mult_forwardpass (void *self, Wire *inputs);
-float *Mult_backwardpass (void *self);
 
 struct FM1 {
   Neuron proto;
-  float fs; // Fintersection if there is variance
+  float fs; // Fintersection POINT (NOT VALUE)if there is variance
   float m; // this mean
   float s; // this is sigma
 };
 
 typedef struct FM1 FM1;
 
-float FM1_forwardpass (void *self, Wire *inputs);
-float *FM1_backwardpass (void *self);
-void *Membership1_New(size_t size, Neuron proto, float m, float s);
-*/
+void FM1_forwardpass (void *self);
+void FM1_backwardpass (void *self);
+
+void *Membership1_New(size_t size, Neuron proto, float m, float s,char *type,Bundle *inbun, Wire *outir);
+
 float *stager (float *a,float *b);
-#define NEWFM1(T, M ,V) Membership1_New(sizeof(T), T##Proto, M, V)
+#define NEWFM1(T, M ,V,C,X,W) Membership1_New(sizeof(T), T##Proto, M, V,C,X,W)
 
 #endif
