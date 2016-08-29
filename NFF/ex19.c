@@ -13,7 +13,8 @@ int epoch = 10;
 #define Ref(T,N) (*(Wire*)T.addr[N])
 #define Refp(T,N) (*(Wire*)T->addr[N])
 #define Wrap(B,W,I) B.addr[I]=(unsigned long int)&W
-
+#define fb(X) X->_(forwardpass)(X)
+#define bb(X) X->_(backwardpass)(X)
 
 #define gr(N) inputs_grad[N]
 #define sqr(N) \
@@ -420,6 +421,38 @@ Wrap(Bicep_bun,Bicep,0);
 Bundle Tricep_bun=newBundle(1);
 Wrap(Tricep_bun,Tricep,0);
 
+Wire Bicep_Z = newWire(0,0);
+Wire Bicep_M = newWire(0,0);
+Wire Bicep_H = newWire(0,0);
+
+Wire Tricep_Z= newWire(0,0);
+Wire Tricep_M= newWire(0,0);
+Wire Tricep_H= newWire(0,0);
+
+FM1 *_Bicep_Z = NEWFM1(FM1,0,0.2,"layer 1: Gate 1- FM1", &Bicep_bun,&Bicep_Z);
+FM1 *_Bicep_M = NEWFM1(FM1,0.5,0.2,"layer 1: Gate 2- FM1", &Bicep_bun,&Bicep_M);
+FM1 *_Bicep_H = NEWFM1(FM1,1,0.2,"layer 1: Gate 3- FM1", &Bicep_bun,&Bicep_H);
+
+FM1 *_Tricep_Z = NEWFM1(FM1,0,0.2,"layer 1: Gate 4- FM1", &Tricep_bun,&Tricep_Z);
+FM1 *_Tricep_M = NEWFM1(FM1,0.5,0.2,"layer 1: Gate 5- FM1", &Tricep_bun,&Tricep_M);
+FM1 *_Tricep_H = NEWFM1(FM1,1,0.2,"layer 1: Gate 6- FM1", &Tricep_bun,&Tricep_H);
+
+
+
+
+fb(_Bicep_Z);
+fb(_Bicep_M);
+fb(_Bicep_H);
+
+bb(_Bicep_Z);
+bb(_Bicep_M);
+bb(_Bicep_H);
+
+fb(_Bicep_Z);
+fb(_Bicep_M);
+fb(_Bicep_H);
+
+//Bundleupdate(&Bicep_bun);
 
 
 }
