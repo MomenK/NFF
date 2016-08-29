@@ -5,8 +5,8 @@
 #include <time.h>
 #include <math.h>
 #include "ex19.h"
-float step_size = 0.01;
 
+float step_size=0.01;
 #define AdRef(T,N) &(*(Wire*)T.addr[N])
 #define Ref(T,N) (*(Wire*)T.addr[N])
 #define Refp(T,N) (*(Wire*)T->addr[N])
@@ -112,21 +112,26 @@ printf("%zd\n",sizeof(total)/sizeof(float));
 void Add_forwardpass (void *self){
   Neuron *obj = self;
   obj->outir->value = 0;
+//  obj->c = "haha";
+printf("\nGate :%s ******************\n",obj->c );
+
    for (int i =0; i < obj->inbun->size; i++)
       {
-    printf("input %d :  %f\n",i, Refp(obj->inbun,i).value );
+    printf("\t\tinput %d :  %f\n",i, Refp(obj->inbun,i).value );
       obj->outir->value += Refp(obj->inbun,i).value;
+        Refp(obj->inbun,i).grad =0;
       }
-
+printf("output is: --> %f\n", obj->outir->value);
 }
 //
 void Add_backwardpass (void *self){
 Neuron *obj = self;
+
 for (int i =0; i < obj->inbun->size; i++)
     {
   Refp(obj->inbun,i).grad += 1* obj->outir->grad;
-  printf("grad %d :  %f\n",i, Refp(obj->inbun,i).grad);
-    Refp(obj->inbun,i).grad =0;
+//  printf("grad %d :  %f\n",i, Refp(obj->inbun,i).grad);
+
     }
 }
 //
@@ -141,13 +146,14 @@ Neuron AddProto= {
 void Mult_forwardpass (void *self){
   Neuron *obj = self;
   obj->outir->value = 1;
+  printf("\nGate :%s ******************\n",obj->c );
    for (int i =0; i < obj->inbun->size; i++)
       {
-    printf("Multple gate :input %d :  %f\n",i, Refp(obj->inbun,i).value );
+    printf("\t\tinput %d :  %f\n",i, Refp(obj->inbun,i).value );
       obj->outir->value *= Refp(obj->inbun,i).value;
       Refp(obj->inbun,i).grad =0;
       }
-
+printf("output is: --> %f\n", obj->outir->value);
 }
 
 void Mult_backwardpass (void *self){
@@ -158,7 +164,7 @@ void Mult_backwardpass (void *self){
   for (int i =0; i < obj->inbun->size; i++)
       {
     Refp(obj->inbun,i).grad +=  (obj->outir->value/Refp(obj->inbun,i).value)* obj->outir->grad;
-    printf("grad %d :  %f\n",i, Refp(obj->inbun,i).grad);
+  //  printf("grad %d :  %f\n",i, Refp(obj->inbun,i).grad);
       }
 
 }
@@ -341,26 +347,27 @@ printf("Bundle access grad %f\n",Ref(bun,2).value);
 
 //This is how you create gates
 
-Wire eat = newWire(0,1);
-Neuron NN = newNeuron(&bun,&eat);
-Add_forwardpass(&NN); // not needed!
-Add_backwardpass(&NN);
-printf("Change  %zu\n", NN.inbun->size);
-printf("I'm hungry for  %f neurons\n", eat.value);
+// Wire eat = newWire(0,1);
+// // Neuron NN = newNeuron(&bun,&eat);
+// // Add_forwardpass(&NN); // not needed!
+// // Add_backwardpass(&NN);
+// Add *NN = NEW(Add, "Layer1: add1",&bun,&eat);
+// // printf("Change  %zu\n", NN.inbun->size);
+// // printf("I'm hungry for  %f neurons\n", eat.value);
 
 Wire drink = newWire(0,1);
-Add *NM = NEW(Add,"Somecrap",&bun,&drink);
-NM->_(forwardpass)(NM);
-NM->_(backwardpass)(NM);
-printf("Change  for pointer%zu\n", NM->_(inbun)->size);
-printf("I'm thristy for  %f neurons Pointers\n", drink.value);
-
+Add *NM = NEW(Add,"Layer1 - Gate 1 - Add",&bun,&drink);
+// NM->_(forwardpass)(NM);
+// NM->_(backwardpass)(NM);
+// printf("Change  for pointer%zu\n", NM->_(inbun)->size);
+// printf("I'm thristy for  %f neurons Pointers\n", drink.value);
+//
 printf("Testing Multiple gate \n");
 Wire sleep = newWire(0,1);
-Mult *FM = NEW(Mult,"first multiplication",&bun,&sleep);
-FM->_(forwardpass)(FM);
-FM->_(backwardpass)(FM);
-printf("I'm dizzy for  %f neurons Pointers\n", sleep.value);
+Mult *FM = NEW(Mult,"Layer1 - Gate 2 - Mult",&bun,&sleep);
+// FM->_(forwardpass)(FM);
+// FM->_(backwardpass)(FM);
+// printf("I'm dizzy for  %f neurons Pointers\n", sleep.value);
 
 Wire _bicep = newWire(0.7,0);
 Wire _bicn = newWire(0,0);
@@ -373,8 +380,23 @@ Wire _bicn = newWire(0,0);
 FM1 *B = NEWFM1(FM1,0.5,0.2,"big",&bunf,&run);
 for(int i=0;i<10;i++)
 {
-B->_(forwardpass)(B);
-B->_(backwardpass)(B);
+// B->_(forwardpass)(B);
+// B->_(backwardpass)(B);
+
+
+NM->_(forwardpass)(NM);
+FM->_(forwardpass)(FM);
+
+
+
+NM->_(backwardpass)(NM);
+FM->_(backwardpass)(FM);
+
+Bundleupdate(&bun);
+
+
+
+
 }
 
 

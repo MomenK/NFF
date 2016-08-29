@@ -46,6 +46,7 @@ void *Neuron_new(size_t size, Neuron proto, char *type,Bundle *inbun, Wire *outi
     *el= proto;
     el->inbun = inbun;
     el->outir = outir;
+    el->c = type;
     if(!el->init(el)) {
       el->destroy(el);
       return NULL;
@@ -99,4 +100,14 @@ Bundle newBundle( size_t N)
 bun.size = N;
 bun.addr = calloc(N, sizeof(Wire));
 return bun;
+}
+
+void Bundleupdate(Bundle *bun)
+{
+for(int i=0; i< bun->size; i++)
+  {
+    Refp(bun,i).value += step_size*Refp(bun,i).grad;
+  //  printf("%f\n",Refp(bun,i).grad );
+  }
+
 }
