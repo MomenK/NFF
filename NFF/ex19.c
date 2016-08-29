@@ -6,7 +6,9 @@
 #include <math.h>
 #include "ex19.h"
 
+
 float step_size=0.01;
+int epoch = 10;
 #define AdRef(T,N) &(*(Wire*)T.addr[N])
 #define Ref(T,N) (*(Wire*)T.addr[N])
 #define Refp(T,N) (*(Wire*)T->addr[N])
@@ -31,7 +33,6 @@ float e(float n){return expf(n);}
      {
        return e(-0.5 * sqr((x-m)/v));
      }
-
 
 
   float solve (float m1, float v1, float m2, float v2)
@@ -205,14 +206,22 @@ void FM1_forwardpass (void *self){
 
   FM1 *obj = self; //all things are referenced annoynamsuley
   obj->_(outir)->value = 0;
-if(Refp(obj->_(inbun),1).value)
+if(obj->_(inbun)->size ==1)
 {
-obj->fs = solve(Refp(obj->_(inbun),0).value, Refp(obj->_(inbun),1).value , obj->m, obj->s);
-}
-else{
   printf("\t\t\t\t\t\t\tsingleton!!\n" );
   obj->fs = Refp(obj->_(inbun),0).value;
   printf("%f\n",obj->fs );
+}
+else {
+      if(Refp(obj->_(inbun),1).value)
+      {
+      obj->fs = solve(Refp(obj->_(inbun),0).value, Refp(obj->_(inbun),1).value , obj->m, obj->s);
+      }
+      else{
+        printf("\t\t\t\t\t\t\tsingleton!!\n" );
+        obj->fs = Refp(obj->_(inbun),0).value;
+        printf("%f\n",obj->fs );
+      }
 }
 obj->_(outir)->value =N(obj->fs, obj->m,obj->s);
 printf("output is: --> %f\n", obj->_(outir)->value);
@@ -314,221 +323,103 @@ int main(int argc, char *argv[])
   //TODO all gates Must recieved wires!
 
 
-
-//*************************************Initialization **************************
-// This is How to create Wires
-Wire _0 = newWire(0.5,0);
-Wire _1 = newWire(1,0);
-Wire _2 = newWire(2,0);
-Wire _3 = newWire(3,0);
-Wire _4 = newWire(4,0);
-
-// This is how to bundle Wires
-Bundle bun = newBundle(5);
-Wrap(bun,_0,0);
-Wrap(bun,_1,1);
-Wrap(bun,_2,2);
-Wrap(bun,_3,3);
-Wrap(bun,_4,4);
-
-// This is How to reference bundles
-Wire *Gimp = AdRef(bun,2);
-// Gimp->grad = 200;
-// // or
-// Ref(bun,2).grad = 100;
-
-
-
-// This is how they all point to the same data
-printf("grad %f\n", _2.grad);
-printf("Gimp grad %f\n", Gimp->grad);
-printf("Bundle access grad %f\n",Ref(bun,2).value);
-
-
-//This is how you create gates
-
-// Wire eat = newWire(0,1);
-// // Neuron NN = newNeuron(&bun,&eat);
-// // Add_forwardpass(&NN); // not needed!
-// // Add_backwardpass(&NN);
-// Add *NN = NEW(Add, "Layer1: add1",&bun,&eat);
-// // printf("Change  %zu\n", NN.inbun->size);
-// // printf("I'm hungry for  %f neurons\n", eat.value);
-
-Wire drink = newWire(0,1);
-Add *NM = NEW(Add,"Layer1 - Gate 1 - Add",&bun,&drink);
-// NM->_(forwardpass)(NM);
-// NM->_(backwardpass)(NM);
-// printf("Change  for pointer%zu\n", NM->_(inbun)->size);
-// printf("I'm thristy for  %f neurons Pointers\n", drink.value);
 //
-printf("Testing Multiple gate \n");
-Wire sleep = newWire(0,1);
-Mult *FM = NEW(Mult,"Layer1 - Gate 2 - Mult",&bun,&sleep);
-// FM->_(forwardpass)(FM);
-// FM->_(backwardpass)(FM);
-// printf("I'm dizzy for  %f neurons Pointers\n", sleep.value);
+// //*************************************Tutorial**************************
+// // This is How to create Wires
+// Wire _0 = newWire(0.5,0);
+// Wire _1 = newWire(1,0);
+// Wire _2 = newWire(2,0);
+// Wire _3 = newWire(3,0);
+// Wire _4 = newWire(4,0);
+//
+// // This is how to bundle Wires
+// Bundle bun = newBundle(5);
+// Wrap(bun,_0,0);
+// Wrap(bun,_1,1);
+// Wrap(bun,_2,2);
+// Wrap(bun,_3,3);
+// Wrap(bun,_4,4);
+//
+// // This is How to reference bundles
+// Wire *Gimp = AdRef(bun,2);
+// // Gimp->grad = 200;
+// // // or
+// // Ref(bun,2).grad = 100;
+//
+//
+//
+// // This is how they all point to the same data
+// printf("grad %f\n", _2.grad);
+// printf("Gimp grad %f\n", Gimp->grad);
+// printf("Bundle access grad %f\n",Ref(bun,2).value);
+//
+//
+// //This is how you create gates
+//
+// // Wire eat = newWire(0,1);
+// // // Neuron NN = newNeuron(&bun,&eat);
+// // // Add_forwardpass(&NN); // not needed!
+// // // Add_backwardpass(&NN);
+// // Add *NN = NEW(Add, "Layer1: add1",&bun,&eat);
+// // // printf("Change  %zu\n", NN.inbun->size);
+// // // printf("I'm hungry for  %f neurons\n", eat.value);
+//
+// Wire drink = newWire(0,1);
+// Add *NM = NEW(Add,"Layer1 - Gate 1 - Add",&bun,&drink);
+// // NM->_(forwardpass)(NM);
+// // NM->_(backwardpass)(NM);
+// // printf("Change  for pointer%zu\n", NM->_(inbun)->size);
+// // printf("I'm thristy for  %f neurons Pointers\n", drink.value);
+// //
+// printf("Testing Multiple gate \n");
+// Wire sleep = newWire(0,1);
+// Mult *FM = NEW(Mult,"Layer1 - Gate 2 - Mult",&bun,&sleep);
+// // FM->_(forwardpass)(FM);
+// // FM->_(backwardpass)(FM);
+// // printf("I'm dizzy for  %f neurons Pointers\n", sleep.value);
 
-Wire _bicep = newWire(0.7,0);
-Wire _bicn = newWire(0,0);
- Bundle bunf = newBundle(2);
- Wrap(bunf,_bicep,0);
- Wrap(bunf,_bicn,1);
-
- Wire run = newWire(0,1);
-
-FM1 *B = NEWFM1(FM1,0.5,0.2,"big",&bunf,&run);
-for(int i=0;i<10;i++)
-{
+// Wire _bicep = newWire(0.7,0);
+// Wire _bicn = newWire(0,0);
+//
+//  // Bundle bunf = newBundle(2);
+//  // Wrap(bunf,_bicep,0);
+//  // Wrap(bunf,_bicn,1);
+//  // or
+//  Bundle bunf = newBundle(1);
+//  Wrap(bunf,_bicep,0);
+//
+// printf("The S thing %f\n",Ref(bunf,1).value );
+//  Wire run = newWire(0,1);
+//
+// FM1 *B = NEWFM1(FM1,0.5,0.2,"big",&bunf,&run);
+// for(int i=0;i<10;i++)
+// {
 // B->_(forwardpass)(B);
 // B->_(backwardpass)(B);
+//
+//
+// NM->_(forwardpass)(NM);
+// FM->_(forwardpass)(FM);
+//
+//
+//
+// NM->_(backwardpass)(NM);
+// FM->_(backwardpass)(FM);
+//
+// Bundleupdate(&bun);
+// }
+//*************************************End of Tutorial**************************
 
 
-NM->_(forwardpass)(NM);
-FM->_(forwardpass)(FM);
+Wire Bicep = newWire(0.7,0);
+Wire Tricep = newWire(0,0);
 
+Bundle Bicep_bun = newBundle(1);
+Wrap(Bicep_bun,Bicep,0);
 
-
-NM->_(backwardpass)(NM);
-FM->_(backwardpass)(FM);
-
-Bundleupdate(&bun);
-
+Bundle Tricep_bun=newBundle(1);
+Wrap(Tricep_bun,Tricep,0);
 
 
 
 }
-
-
-
-
-
-//printf("OUTPUT %f\n" ,j[1].value);
-
-//TODO: for the next part to work you must have stored poniters to the damn inputs
-//***********************************backwardpropagating
-
-/*
-
-  nh[0].value  = R3->_(forwardpass)(R3,r3);
-  pl[0].value  = R4->_(forwardpass)(R4,r4);
-  z[1].value   = R5->_(forwardpass)(R5,r5);
-  nl[1].value  = R6->_(forwardpass)(R6,r6);
-  ph[0].value  = R7->_(forwardpass)(R7,r7);
-  pl[1].value  = R8->_(forwardpass)(R8,r8);
-  z[2].value = R9->_(forwardpass)(R9,r9);
-
-
-printf("NH \t\t%f\n",NH->_(forwardpass)(NH, nh));
-printf("NL \t\t%f\n",NL->_(forwardpass)(NL, nl));
-printf("Z  \t\t%f\n",Z->_(forwardpass)( Z, z));
-printf("PL \t\t%f\n",PL->_(forwardpass)(PL, pl));
-printf("PH \t\t%f\n",PH->_(forwardpass)(PH, ph));
-
-
-Wire wr[3];
-Wire ww;
-wr[0].value = 5;
-wr[1].value=8;
-wr[2].value=7;
-//wr = {.value = 3, .grad = 5}; TODO: Figure This out!
-Z->_(input_size) = 3;
-printf("Z  \t\t%f\n",Z->_(forwardpass)( Z, wr));
-printf(" %f , %f, %zu \n",wr[0].value, wr[1].grad, sizeof(wr));
-
-
-//***************************************Learning
-/*
-for (size_t i = 0; i < 50; i++) {
-printf("Fuzzy mmber output \t\t%f\n",Bi_Z->_(forwardpass)(Bi_Z, g3));
-Bi_Z->_(backwardpass)(Bi_Z,1);
-}
-*/
-}
-
-
-
-
-/*
-Example of Usage:
-
-float step_size = 0.01;
-Add *gate1 = NEW(Add,"gate done");
-
-printf("Gate created\n" );
-//float intial_inputs[] = {1.2,1.0,5};
-
-float a[] ={1.0, 2.4};
-float b[] = {5.0, 0.0};obj[0].value =  a.value;
-  obj[0].grad = a.grad;
-  obj[1].value = b.value;
-  obj[1].grad = b.grad;
-gate1->_(input_size) =4; // need a better way man
-float *intial_inputs = stager(a,b);
-
-//gate1->_(inputs) = ii;
-//ii[1]= 7.0;
-//printf("%f\n",gate1->_(inputs[1]));
-printf("output %f\n",gate1->_(forwardpass)(gate1, intial_inputs));
-gate1->_(backwardpass)(gate1,1);
-for (size_t i = 0; i < gate1->_(input_size); i++) {
-  printf("Gradint for the %zd input is %f\n", i, gate1->_(inputs_grad[i]) );
-      }
-
-gate1->_(destroy)(gate1);
-
-float x[] = {-2.0,3.0};
-Mult *gate2 = NEW(Mult, "gate at layer 1");
-printf("Gate created\n" );
-
-//gate2->_(input_size) =2;
-
-printf("output %f\n",gate2->_(forwardpass)(gate2, x));
-
-gate2->_(backwardpass)(gate2,1);
-
-for (size_t i = 0; i < gate2->_(input_size); i++) {
-  printf("Gradint for the %zd input is %f\n", i, gate2->_(inputs_grad[i]) );
-
-  printf("GUdated vale for the %zd input is %f\n", i, gate2->_(inputs[i]) + step_size * gate2->_(inputs_grad[i]) );
-
-      }/*
-
-
-
-
-      /////////gate1
-      //  g2[0]= gate1->_(forwardpass)(gate1, g1);
-      //  printf("output %f\n",g2[0]);
-
-
-
-      //////////////////////////////gate2
-
-      //printf("output %f\n",gate2->_(forwardpass)(gate2, g2));
-
-
-      //////////////////////////////////////////////gate3
-
-
-
-
-
-
-      ///******************************************************** backprogate
-      //gate2->_(backwardpass)(gate2,1);
-      //gate1->_(backwardpass)(gate1, gate2->_(inputs_grad[0]));
-
-
-      /*
-      ///***************************************************************************************update
-      g2[1]+= gate2->_(inputs_grad[1])* step_size;
-      g1[0]+= gate1->_(inputs_grad[0]) * step_size;
-      g1[1]+= gate1->_(inputs_grad[0]) * step_size;
-
-      printf("\tupdate x[0] %f\n",g1[0]);
-      printf("\tupdate x[1]%f\n",g1[1]);
-      printf("\tupdate y[1] %f\n",g2[1]);
-
-      //printf("output %f\n",g2[1]*(g1[0]+g1[1]));
-      */

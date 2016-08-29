@@ -130,7 +130,7 @@ void Closefile(struct Input *inp)
 
 int main(int argc, char* argv[])
 {
-  if(argc < 2 || argc > 4) die("USAGE: ex17 <dbfile> <colm> <colm>");
+  if(argc < 2 || argc > 4) die("USAGE: ex17 <dbfile> <colm> <colm>"); //./CsvParser du.csv 1 2
   char *filename = argv[1];
 
   //////////////////////////////////////////// Reading and parsing .csv File

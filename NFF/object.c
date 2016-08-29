@@ -97,8 +97,18 @@ return Gimp;
 Bundle newBundle( size_t N)
 {
   Bundle bun;
+
 bun.size = N;
+if (N!=1)
+{
 bun.addr = calloc(N, sizeof(Wire));
+}
+else
+{
+bun.addr = calloc(2, sizeof(Wire));
+Wire Zero = newWire(0,0);
+Wrap(bun,Zero,1);
+}
 return bun;
 }
 
