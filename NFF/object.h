@@ -45,8 +45,6 @@ void Neuron_backwardpass (void *self);
 void *Neuron_new(size_t size, Neuron proto, char *type,Bundle *inbun, Wire *outir); // TO DO : Kill and replace
 
 
-
-
 #define NEW(T, N,M,W) Neuron_new(sizeof(T), T##Proto, N,M,W)
 #define _(N) proto.N
 
