@@ -55,4 +55,6 @@ void *Neuron_new(size_t size, Neuron proto, char *type,Bundle *inbun, Wire *outi
 #define Refp(T,N) (*(Wire*)T->addr[N])
 #define Wrap(B,W,I) B.addr[I]=(unsigned long int)&W
 
+
+///
 #endif
