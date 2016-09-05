@@ -2,102 +2,13 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <math.h>
-#include "thing.h"
-#include "thing.c"
+#include "object.h"
+
 
 int main(int argc, char *argv[])
 {
   //TODO all gates Must recieved wires!
 
-
-//
-// //*************************************Tutorial**************************
-// // This is How to create Wires
-// Wire _0 = newWire(0.5,0);
-// Wire _1 = newWire(1,0);
-// Wire _2 = newWire(2,0);
-// Wire _3 = newWire(3,0);
-// Wire _4 = newWire(4,0);
-//
-// // This is how to bundle Wires
-// Bundle bun = newBundle(5);
-// Wrap(bun,_0,0);
-// Wrap(bun,_1,1);
-// Wrap(bun,_2,2);
-// Wrap(bun,_3,3);
-// Wrap(bun,_4,4);
-//
-// // This is How to reference bundles
-// Wire *Gimp = AdRef(bun,2);
-// // Gimp->grad = 200;
-// // // or
-// // Ref(bun,2).grad = 100;
-//
-//
-//
-// // This is how they all point to the same data
-// printf("grad %f\n", _2.grad);
-// printf("Gimp grad %f\n", Gimp->grad);
-// printf("Bundle access grad %f\n",Ref(bun,2).value);
-//
-//
-// //This is how you create gates
-//
-// // Wire eat = newWire(0,1);
-// // // Neuron NN = newNeuron(&bun,&eat);
-// // // Add_forwardpass(&NN); // not needed!
-// // // Add_backwardpass(&NN);
-// // Add *NN = NEW(Add, "Layer1: add1",&bun,&eat);
-// // // printf("Change  %zu\n", NN.inbun->size);
-// // // printf("I'm hungry for  %f neurons\n", eat.value);
-//
-// Wire drink = newWire(0,1);
-// Add *NM = NEW(Add,"Layer1 - Gate 1 - Add",&bun,&drink);
-// // NM->_(forwardpass)(NM);
-// // NM->_(backwardpass)(NM);
-// // printf("Change  for pointer%zu\n", NM->_(inbun)->size);
-// // printf("I'm thristy for  %f neurons Pointers\n", drink.value);
-// //
-// printf("Testing Multiple gate \n");
-// Wire sleep = newWire(0,1);
-// Mult *FM = NEW(Mult,"Layer1 - Gate 2 - Mult",&bun,&sleep);
-// // FM->_(forwardpass)(FM);
-// // FM->_(backwardpass)(FM);
-// // printf("I'm dizzy for  %f neurons Pointers\n", sleep.value);
-
-// Wire _bicep = newWire(0.7,0);
-// Wire _bicn = newWire(0,0);
-//
-//  // Bundle bunf = newBundle(2);
-//  // Wrap(bunf,_bicep,0);
-//  // Wrap(bunf,_bicn,1);
-//  // or
-//  Bundle bunf = newBundle(1);
-//  Wrap(bunf,_bicep,0);
-//
-// printf("The S thing %f\n",Ref(bunf,1).value );
-//  Wire run = newWire(0,1);
-//
-// FM1 *B = NEWFM1(FM1,0.5,0.2,"big",&bunf,&run);
-// for(int i=0;i<10;i++)
-// {
-// B->_(forwardpass)(B);
-// B->_(backwardpass)(B);
-//
-//
-// NM->_(forwardpass)(NM);
-// FM->_(forwardpass)(FM);
-//
-//
-//
-// NM->_(backwardpass)(NM);
-// FM->_(backwardpass)(FM);
-//
-// Bundleupdate(&bun);
-// }
-//*************************************End of Tutorial**************************
 
 
 

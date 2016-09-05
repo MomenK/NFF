@@ -3,7 +3,7 @@ CFLAG=-Wall	-g
 
 all:	ex19
 
-ex19:	-lm	object.o
+ex19:	object.o -lm
 
 pyemd:	-lm -lpython2.7
 
