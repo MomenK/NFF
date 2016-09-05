@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "object.h"
+#include "thing.h"
 
 
 int main(int argc, char *argv[])

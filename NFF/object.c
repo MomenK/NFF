@@ -202,16 +202,6 @@ else{     if(a == 0)
      return  o;
      }
 
-void die(const char *message)
-{
-  if(errno)
-  perror(message);
-  else
-  printf("ERROR: %s\n", message);
-
-  exit(1);
-}
-
 /////////////////////////////////////////ADD
 void Add_forwardpass (void *self){
   Neuron *obj = self;
