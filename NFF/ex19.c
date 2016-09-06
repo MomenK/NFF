@@ -1,3 +1,4 @@
+#define epoch  500
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -5,11 +6,79 @@
 #include "object.h"
 #include "thing.h"
 
-
+float step_size = 0.1;
+float SSE= 0;
 int main(int argc, char *argv[])
 {
   //TODO all gates Must recieved wires!
 
+
+//////////////////////////////// Parsing
+if(argc < 2 || argc > 4) die("USAGE: ./ex17 <dbfile> <colm> <colm>"); //./CsvParser du.csv 1 2
+char *filename = argv[1];
+
+//////////////////////////////////////////// Reading and parsing .csv File
+int biceps_col = atoi(argv[2]);
+struct Input *inp = File_Open(filename); // Open the file and loads the data base
+inp = File_Parse(inp ,biceps_col); // Parses the database into coloums
+InputsPrint(inp);
+
+printf("Moahahahaha\n" );
+//if(argc == 4)
+//  {
+  int force_col = atoi(argv[3]);
+  struct Input *inp1 = File_Open(filename);
+  inp1 = File_Parse(inp1 ,force_col);
+  InputsPrint(inp1);
+//    }
+
+////////////////////////////////////////////// Converting to float
+float biceps[MAX_ELEMENT];
+float force[MAX_ELEMENT];
+
+for(int i =0; i< MAX_ELEMENT ; i++)
+  {
+  biceps[i]=atof(inp->I[i].lines);
+//  printf("bbbbbbbbbbbbb%f\n",biceps[i] );
+  force[i]=atof(inp1->I[i].lines);
+//  printf("fffffffffff%f\n",force[i] );
+  }
+  Closefile(inp);
+  Closefile(inp1);
+
+
+// //////////////////////////////////////////// Shuffling
+// srand(time(NULL));
+// shufflem(biceps,force, MAX_ELEMENT);
+//
+// for(int i =0; i< MAX_ELEMENT ; i++)
+//   {
+//   printf("B %d :%f\n",i,biceps[i] );
+//   printf("O %d :%f\n",i,force[i] );
+//   }
+//
+//
+// ///////////////////////////////////////// Dividing the training and the testing
+// float b_train[MAX_ELEMENT-TEST_SET];
+// float f_train[MAX_ELEMENT-TEST_SET];
+// float b_test[TEST_SET];
+// float f_test[TEST_SET];
+// printf("\nTraining Sets\n" );
+// for(int i =0; i< MAX_ELEMENT-TEST_SET ; i++)
+//   {
+//   b_train[i]=biceps[i];
+//   printf("%f\n",b_train[i] );
+//   f_train[i]=force[i];
+//   printf("%f\n",f_train[i] );
+//   }
+// printf("Testing Sets\n" );
+// for(int i =0; i< TEST_SET ; i++)
+//   {
+//   b_test[i]=biceps[i+MAX_ELEMENT-TEST_SET];
+//   printf("%f\n",b_test[i] );
+//   f_test[i]=force[i+MAX_ELEMENT-TEST_SET];
+//   printf("%f\n",f_test[i] );
+//   }
 
 
 
@@ -117,19 +186,25 @@ Wrap(gard,OPH,4);
 
 Wire torque;
 float a[] = {0,0.25, 0.5,0.75,1};
-float *b = a;
+
 
 LMS *_gard = NEWLMS(LMS,"Layer 4: Aggregation",&gard,&torque,a);
 
-
-
-for(int i =0; i<5; i++)
+float perf[epoch];
+int i;
+int j;
+for(i =0; i<epoch; i++)
 {
-printf("\n\n////////////////////?Generation :%d\n",i );
+  perf[i] = 0;
+printf("\n\n__________________________Generation____________________________ :%d\n",i );
+   for(j = 0; j<MAX_ELEMENT;j++ )
+   {
+  printf("\t\t\t\t\t Training Pair %d : (%f , %f )\n",j,biceps[j],force[j] );
+  Bicep.value = biceps[j]; // There reaches nan after the first iteration for big numbers
 fb(_Bicep_Z);
 fb(_Bicep_M);
-fb(_Bicep_H);
-
+fb(_Bicep_H);// Here is your problem
+printf("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t Bicep_H Gradient !!!!!!!!!!!%f\n", Bicep_H.grad);
 fb(_Tricep_Z);
 fb(_Tricep_M);
 fb(_Tricep_H);
@@ -145,6 +220,7 @@ fb(_RMH);
 fb(_RHZ);
 fb(_RHM);
 fb(_RHH);
+printf("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t Bicep_H Gradient 00000%f\n", Bicep_H.grad);
 
 fb(_ONH);
 fb(_ONL);
@@ -154,8 +230,12 @@ fb(_OPH);
 
 fb(_gard);
 
-torque.grad = 1;
-printf("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
+//torque.value -= 0.5;
+torque.grad = -(torque.value - force[j]);
+perf[i]+= sqr(torque.grad);
+//torque.grad = -1;
+//printf("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
+  printf("\t\t\t\t\t                  error (%f - %f )  %f\n", force[j],torque.value , torque.grad);
 bb(_gard);
 
 
@@ -165,6 +245,7 @@ bb(_OZE);
 bb(_OPL);
 bb(_OPH);
 
+
 bb(_RZZ);
 bb(_RZM);
 bb(_RZH);
@@ -173,29 +254,71 @@ bb(_RMZ);
 bb(_RMM);
 bb(_RMH);
 
-bb(_RHZ);
+bb(_RHZ);// This dude can generate nan!!!
 bb(_RHM);
 bb(_RHH);
+
 
 bb(_Bicep_Z);
 bb(_Bicep_M);
 bb(_Bicep_H);
-
 bb(_Tricep_Z);
 bb(_Tricep_M);
 bb(_Tricep_H);
-
-//
-// Bicep_Z.grad =2;
-// Bicep_M.grad =2;
-// Bicep_H.grad =2;
-//
-// bb(_Bicep_Z);
-// bb(_Bicep_M);
-// bb(_Bicep_H);
-
-
-//Bundleupdate(&Bicep_bun); should be inside that back
+}
 }
 
+
+                                                  //// Testing
+FILE *stream = fopen("Result.csv","w");
+                                                  printf("\n\n__________________________Generation____________________________ :%d\n",i );
+                                                     for(j = 0; j<MAX_ELEMENT;j++ )
+                                                     {
+                                                    printf("\t\t\t\t\t Training Pair %d : (%f , %f )\n",j,biceps[j],force[j] );
+                                                    Bicep.value = biceps[j]; // There reaches nan after the first iteration for big numbers
+                                                  fb(_Bicep_Z);
+                                                  fb(_Bicep_M);
+                                                  fb(_Bicep_H);// Here is your problem
+                                                  printf("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t Bicep_H Gradient !!!!!!!!!!!%f\n", Bicep_H.grad);
+                                                  fb(_Tricep_Z);
+                                                  fb(_Tricep_M);
+                                                  fb(_Tricep_H);
+
+                                                  fb(_RZZ);
+                                                  fb(_RZM);
+                                                  fb(_RZH);
+
+                                                  fb(_RMZ);
+                                                  fb(_RMM);
+                                                  fb(_RMH);
+
+                                                  fb(_RHZ);
+                                                  fb(_RHM);
+                                                  fb(_RHH);
+                                                  printf("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t Bicep_H Gradient 00000%f\n", Bicep_H.grad);
+
+                                                  fb(_ONH);
+                                                  fb(_ONL);
+                                                  fb(_OZE);
+                                                  fb(_OPL);
+                                                  fb(_OPH);
+
+                                                  fb(_gard);
+                                              //    torque.value -= 0.5;
+                                                  torque.grad = -(torque.value - force[j]);
+                                                  fprintf(stream, "%f,%f,\n", torque.value ,force[j]);
+                                                  SSE+= sqr(torque.grad);
+                                                  //torque.grad = -1;
+                                                  //printf("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
+
+                                                  }
+                                                  fclose(stream);
+//Bundleupdate(&Bicep_bun); should be inside that back
+
+printf("******************************************\n");
+for(int k = 0; k< epoch; k++)
+{
+printf("*  %d    : %f \n",k,perf[k] );
+}
+printf("*  SSE    : %f(MAX_ELEMENT %d) MSE  :%f \n",SSE,MAX_ELEMENT,SSE/MAX_ELEMENT);
 }

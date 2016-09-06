@@ -6,8 +6,8 @@
 #include <time.h>
 #include <math.h>
 #include <errno.h>
+extern float step_size;
 
-float step_size = 0.01;
 Neuron AddProto= {
   .forwardpass = Add_forwardpass,
   .backwardpass = Add_backwardpass
@@ -207,15 +207,15 @@ void Add_forwardpass (void *self){
   Neuron *obj = self;
   obj->outir->value = 0;
 //  obj->c = "haha";
-printf("\nGate :%s \n",obj->c );
+//printf("\nGate :%s \n",obj->c );
 
    for (int i =0; i < obj->inbun->size; i++)
       {
-    printf("\t\tinput %d :  %f\n",i, Refp(obj->inbun,i).value );
+  //  printf("\t\tinput %d :  %f\n",i, Refp(obj->inbun,i).value );
       obj->outir->value += Refp(obj->inbun,i).value;
         Refp(obj->inbun,i).grad =0;
       }
-printf("\t\t\toutput is: --> %f\n", obj->outir->value);
+//printf("\t\t\toutput is: --> %f\n", obj->outir->value);
 }
 //
 void Add_backwardpass (void *self){
@@ -236,14 +236,14 @@ for (int i =0; i < obj->inbun->size; i++)
 void Mult_forwardpass (void *self){
   Neuron *obj = self;
   obj->outir->value = 1;
-  printf("\nGate :%s \n",obj->c );
+  //printf("\nGate :%s \n",obj->c );
    for (int i =0; i < obj->inbun->size; i++)
       {
-    printf("\t\tinput %d :  %f\n",i, Refp(obj->inbun,i).value );
+    //printf("\t\tinput %d :  %f\n",i, Refp(obj->inbun,i).value );
       obj->outir->value *= Refp(obj->inbun,i).value;
       Refp(obj->inbun,i).grad =0;
       }
-printf("\t\t\toutput is: --> %f\n", obj->outir->value);
+//printf("\t\t\toutput is: --> %f\n", obj->outir->value);
 }
 
 void Mult_backwardpass (void *self){
@@ -253,8 +253,13 @@ void Mult_backwardpass (void *self){
   //   //obj->inputs_grad = malloc(obj->input_size*sizeof(float));
   for (int i =0; i < obj->inbun->size; i++)
       {
-    Refp(obj->inbun,i).grad +=  (obj->outir->value/Refp(obj->inbun,i).value)* obj->outir->grad;
-  //  printf("grad %d :  %f\n",i, Refp(obj->inbun,i).grad);
+  //  Refp(obj->inbun,i).grad +=  (obj->outir->value/Refp(obj->inbun,i).value)* obj->outir->grad; // this divison result in Zero
+  Refp(obj->inbun,i).grad +=  (Refp(obj->inbun,1-i).value)* obj->outir->grad;
+    printf("grad %d :  %f\n",i, Refp(obj->inbun,i).grad);
+    if (isnan(Refp(obj->inbun,i).grad))
+    {
+      printf("grad %d :  %f\n",i, Refp(obj->inbun,i).grad);
+    }
       }
 
 }
@@ -297,9 +302,9 @@ void FM1_forwardpass (void *self){
   obj->_(outir)->value = 0;
 if(obj->_(inbun)->size ==1)
 {
-  printf("\t\t\t\t\t\t\tsingleton!!\n" );
+  //printf("\t\t\t\t\t\t\tsingleton\n" );
   obj->fs = Refp(obj->_(inbun),0).value;
-  printf("%f\n",obj->fs );
+  printf("for %f",obj->fs );
 }
 else {
       if(Refp(obj->_(inbun),1).value)
@@ -307,13 +312,13 @@ else {
       obj->fs = solve(Refp(obj->_(inbun),0).value, Refp(obj->_(inbun),1).value , obj->m, obj->s);
       }
       else{
-        printf("\t\t\t\t\t\t\tsingleton!!\n" );
+    //    printf("\t\t\t\t\t\t\tsingleton!!\n" );
         obj->fs = Refp(obj->_(inbun),0).value;
         printf("%f\n",obj->fs );
       }
 }
 obj->_(outir)->value =N(obj->fs, obj->m,obj->s);
-printf("output is: --> %f\n", obj->_(outir)->value);
+printf(" --> %f\n", obj->_(outir)->value);
 
 
 
@@ -326,9 +331,15 @@ void FM1_backwardpass (void *self){
 
 if(Refp(obj->_(inbun),1).value)
 Refp(obj->_(inbun),1).grad= N(obj->fs + 0.0001, obj->m,obj->s)/0.0001; // Analytic gradient
-
+printf("Previous membership m %f and variane %f\n",obj->m , obj->s );
 obj->m +=  step_size*obj->_(outir)->grad * (obj->fs-obj->m) * obj->_(outir)->value/ sqr(obj->s);
 obj->s +=  step_size*(obj->_(outir)->grad * sqr(obj->fs-obj->m) * obj->_(outir)->value/ tri(obj->s));
+printf("Upated membership m %f and variane %f\n",obj->m , obj->s );
+if (isnan(obj->m))
+{
+  printf(" output gradient !%f output value %f \n", obj->_(outir)->grad  , obj->_(outir)->value);
+  exit(1);
+}
 
 }
 
@@ -365,26 +376,33 @@ void *LMS_new(size_t size, Neuron proto, char *type,Bundle *inbun, Wire *outir, 
 void LMS_forwardpass(void *self)
 {
   LMS *obj = self;
+  obj->sum = 0;
   obj->_(outir)->value = 0;
-printf("///////////////////////////////Aggregation/////////////////////\n" );
+printf("___________________________Aggregation\n" );
   for(int i =0; i<obj->_(inbun)->size; i++)
   {
+    obj->sum += Refp(obj->_(inbun),i).value;
     obj->_(outir)->value += obj->Weight[i]*  Refp(obj->_(inbun),i).value;
-    printf("%f *  %f = %f \n", obj->Weight[i],  Refp(obj->_(inbun),i).value,obj->Weight[i]*  Refp(obj->_(inbun),i).value);
+    //printf("%f *  %f = %f \n", obj->Weight[i],  Refp(obj->_(inbun),i).value,obj->Weight[i]*  Refp(obj->_(inbun),i).value);
   }
-  printf("Torque output is: --> %f\n", obj->_(outir)->value);
+obj->_(outir)->value = obj->_(outir)->value/obj->sum;
+  printf("\t\t\t\t\t                  output  %f\n", obj->_(outir)->value);
 }
 
 void LMS_backwardpass(void *self)
 {
 
   LMS *obj = self;
+  float N= obj->_(outir)->value*obj->sum;
   for(int i =0; i<obj->_(inbun)->size; i++)
   {
-    Refp(obj->_(inbun),i).grad = obj->Weight[i]*  obj->_(outir)->grad; //backpassing the error
-    obj->Weight[i] += step_size*  Refp(obj->_(inbun),i).value*obj->_(outir)->grad;
+    // Refp(obj->_(inbun),i).grad = obj->Weight[i]*  obj->_(outir)->grad; //backpassing the error Here is the problem
+    // obj->Weight[i] += step_size*  Refp(obj->_(inbun),i).value*obj->_(outir)->grad;
 
-      //obj->Weight[i] += step_size*  (s *obj->Weight[i]*obj->_(outir)->grad*Refp(obj->_(inbun),i).value;
+
+    Refp(obj->_(inbun),i).grad = (obj->Weight[i] - obj->_(outir)->value)*  obj->_(outir)->grad/obj->sum; //backpassing the error Here is the problem
+    obj->Weight[i] += step_size*  Refp(obj->_(inbun),i).value*obj->_(outir)->grad/obj->sum;
+
     printf("Updated weight%f\n",obj->Weight[i] );
   }
 }

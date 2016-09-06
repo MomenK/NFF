@@ -1,7 +1,6 @@
 #include "thing.h"
 
 
-
 void shufflem(float *array,float *array1, size_t n)
 {
     if (n > 1)

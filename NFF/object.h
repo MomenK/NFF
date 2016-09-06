@@ -81,6 +81,7 @@ void *Membership1_New(size_t size, Neuron proto, float m, float s,char *type,Bun
 struct LMS {
   Neuron proto;
   float *Weight;
+  float sum;
 };
 typedef struct LMS LMS;
 void LMS_forwardpass(void *self);

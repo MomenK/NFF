@@ -83,18 +83,22 @@ int main()
    static char command[500];
  ///snprintf(command, 500, "pylab.plot(x, pylab.normpdf(x, %f,%f ))\n", m1, std1);
   //PyRun_SimpleString(command);
-
-
-snprintf(command, 500, "pylab.plot(x, gaussian(x, %f,%f ))\n", m1, std1);
- PyRun_SimpleString(command);
-
-  // Two lines for plotting !
-  snprintf(command, 500, "pylab.plot(x, gaussian(x, %f,%f ))\n", m2, std2);
+  float z[] = {0,1,2,3,5};
+  float y[] = {0,1,2,3,3};
+  for(int i =0; i<5; i++){
+  snprintf(command, 500, "pylab.plot(%f, %f)\n",z[i],y[i]);
    PyRun_SimpleString(command);
-
-   snprintf(command, 500 ,"pylab.plot(%f,gaussian(%f,%f,%f),'o')\n", result,result, m1, std1);
-    PyRun_SimpleString(command);
-
+}
+// snprintf(command, 500, "pylab.plot(x, gaussian(x, %f,%f ))\n", m1, std1);
+//  PyRun_SimpleString(command);
+//
+//   // Two lines for plotting !
+//   snprintf(command, 500, "pylab.plot(x, gaussian(x, %f,%f ))\n", m2, std2);
+//    PyRun_SimpleString(command);
+//
+//    snprintf(command, 500 ,"pylab.plot(%f,gaussian(%f,%f,%f),'o')\n", result,result, m1, std1);
+//     PyRun_SimpleString(command);
+//
 
    // Show plot
    PyRun_SimpleString("pylab.show()");

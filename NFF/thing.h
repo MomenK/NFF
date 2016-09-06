@@ -6,10 +6,11 @@
  #include <errno.h>
  #include <time.h>
 
- #define MAX_DATA 200
- #define MAX_ELEMENT 50
- #define TEST_SET 10
- #define epoch
+#define MAX_DATA 200
+#define MAX_ELEMENT 66 // or TEST_SET
+#define TEST_SET 10
+
+
 
  struct Inputs{ // Child of one Line
      char lines[MAX_DATA];
