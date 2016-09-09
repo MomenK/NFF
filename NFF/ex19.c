@@ -5,8 +5,8 @@
 #include <string.h>
 #include "object.h"
 #include "thing.h"
-
-float step_size = 0.1;
+#include "math.h"
+float step_size = 0.01;
 float SSE= 0;
 int main(int argc, char *argv[])
 {
@@ -97,13 +97,13 @@ Wire Bicep_Z, Bicep_M ,Bicep_H;
 
 Wire Tricep_Z,Tricep_M,Tricep_H;
 ///
-FM1 *_Bicep_Z = NEWFM1(FM1,0,0.2,"layer 1: Gate 1- FM1", &Bicep_bun,&Bicep_Z);
-FM1 *_Bicep_M = NEWFM1(FM1,0.5,0.2,"layer 1: Gate 2- FM1", &Bicep_bun,&Bicep_M);
-FM1 *_Bicep_H = NEWFM1(FM1,1,0.2,"layer 1: Gate 3- FM1", &Bicep_bun,&Bicep_H);
+FM1 *_Bicep_Z = NEWFM1(FM1,0,0.1,"layer 1: Gate 1- FM1", &Bicep_bun,&Bicep_Z);
+FM1 *_Bicep_M = NEWFM1(FM1,0.5,0.1,"layer 1: Gate 2- FM1", &Bicep_bun,&Bicep_M);
+FM1 *_Bicep_H = NEWFM1(FM1,1,0.1,"layer 1: Gate 3- FM1", &Bicep_bun,&Bicep_H);
 
-FM1 *_Tricep_Z = NEWFM1(FM1,0,0.2,"layer 1: Gate 4- FM1", &Tricep_bun,&Tricep_Z);
-FM1 *_Tricep_M = NEWFM1(FM1,0.5,0.2,"layer 1: Gate 5- FM1", &Tricep_bun,&Tricep_M);
-FM1 *_Tricep_H = NEWFM1(FM1,1,0.2,"layer 1: Gate 6- FM1", &Tricep_bun,&Tricep_H);
+FM1 *_Tricep_Z = NEWFM1(FM1,0,0.1,"layer 1: Gate 4- FM1", &Tricep_bun,&Tricep_Z);
+FM1 *_Tricep_M = NEWFM1(FM1,0.5,0.1,"layer 1: Gate 5- FM1", &Tricep_bun,&Tricep_M);
+FM1 *_Tricep_H = NEWFM1(FM1,1,0.1,"layer 1: Gate 6- FM1", &Tricep_bun,&Tricep_H);
 /////////////////////////////////////////////////////////////////////////////////
 Bundle ZZ = newBundle(2);
 Wrap(ZZ,Bicep_Z,0);
@@ -232,8 +232,9 @@ fb(_gard);
 
 //torque.value -= 0.5;
 torque.grad = -(torque.value - force[j]);
+
+//torque.grad = -(log(torque.value) * force[j]);
 perf[i]+= sqr(torque.grad);
-//torque.grad = -1;
 //printf("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
   printf("\t\t\t\t\t                  error (%f - %f )  %f\n", force[j],torque.value , torque.grad);
 bb(_gard);

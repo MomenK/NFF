@@ -330,10 +330,13 @@ void FM1_backwardpass (void *self){
   FM1 *obj = self; //all things are referenced annoynamsuley
 
 if(Refp(obj->_(inbun),1).value)
-Refp(obj->_(inbun),1).grad= N(obj->fs + 0.0001, obj->m,obj->s)/0.0001; // Analytic gradient
+Refp(obj->_(inbun),1).grad= (N(obj->fs + 0.0001, obj->m,obj->s)-N(obj->fs, obj->m,obj->s))/0.0001; // Analytic gradient
 printf("Previous membership m %f and variane %f\n",obj->m , obj->s );
 obj->m +=  step_size*obj->_(outir)->grad * (obj->fs-obj->m) * obj->_(outir)->value/ sqr(obj->s);
-obj->s +=  step_size*(obj->_(outir)->grad * sqr(obj->fs-obj->m) * obj->_(outir)->value/ tri(obj->s));
+//obj->s +=  step_size*(obj->_(outir)->grad * sqr(obj->fs-obj->m) * obj->_(outir)->value/ tri(obj->s)); // This expression in wrong
+
+
+obj->s +=  step_size*obj->_(outir)->grad * (N(obj->fs , obj->m,obj->s+ 0.0001)-N(obj->fs , obj->m,obj->s))/0.0001;
 printf("Upated membership m %f and variane %f\n",obj->m , obj->s );
 if (isnan(obj->m))
 {
