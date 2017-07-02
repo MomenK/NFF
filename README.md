@@ -20,6 +20,5 @@ Wrap(ZZ,Tricep_Z,1);
 Bundle ZM = newBundle(2);
 Wrap(ZM,Bicep_Z,0);
 Wrap(ZM,Tricep_M,1);
-```
-
-![alt text](https://github.com/MomenK/NFF/blob/Bundle/example.JPG)
+```dd
+<img src="https://github.com/MomenK/NFF/blob/Bundle/example.JPG" width="48"
