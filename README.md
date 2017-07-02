@@ -23,3 +23,11 @@ Wrap(ZM,Tricep_M,1);
 ```
 
 <img src="https://github.com/MomenK/NFF/blob/Bundle/example.JPG" width="400">
+
+### Structure and example
+
+Library declarations and functions are provided in object.h/object.c/object.o
+
+ex19 is an example of the following struture:
+
+<img src="https://github.com/MomenK/NFF/blob/Bundle/example.JPG" width="400">
