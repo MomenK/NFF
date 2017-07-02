@@ -11,7 +11,7 @@ Naturally, neural networks can have neurons connected to a multiple of other neu
 “Wrap” function was used to solve this problem each wires is referenced by a memory location and each neuron input is “Bundle” of these “Wires”.
 To create two wires from the input “Biceps” this is done as follows:
 
-
+```
 #define Wrap(B,W,I) B.addr[I]=(unsigned long int)&W
 
 Wire Bicep_Z
@@ -21,3 +21,4 @@ Wrap(ZZ,Tricep_Z,1);
 Bundle ZM = newBundle(2);
 Wrap(ZM,Bicep_Z,0);
 Wrap(ZM,Tricep_M,1);
+```
