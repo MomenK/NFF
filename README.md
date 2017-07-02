@@ -10,7 +10,7 @@ Naturally, neural networks can have neurons connected to a multiple of other neu
 “Wrap” function was used to solve this problem each wires is referenced by a memory location and each neuron input is “Bundle” of these “Wires”.
 To create two wires from the input “Biceps” this is done as follows:
 
-```
+```c
 #define Wrap(B,W,I) B.addr[I]=(unsigned long int)&W
 
 Wire Bicep_Z
